@@ -57,34 +57,42 @@ public partial class RainMeadowPupifier
 
     private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
     {
-        if (!self.isNPC && Options.SlugpupEnabled != self.playerState.isPup && self.IsLocal())
+        if (!self.isNPC && Options.SlugpupEnabled != self.playerState.isPup && self.IsLocal() && Options.UseSlugpupStatsToggle.Value)
         {
             // we multiply by survivor -> slugpup values (aka difference between survivor and slugpup)
             if (self.playerState.isPup = Options.SlugpupEnabled)
             {
-                self.slugcatStats.bodyWeightFac *= 0.65f;
-                self.slugcatStats.generalVisibilityBonus -= 0.2f;
-                self.slugcatStats.visualStealthInSneakMode *= 1.2f;
-                self.slugcatStats.loudnessFac *= 0.5f;
-                self.slugcatStats.lungsFac *= 0.8f;
-                self.slugcatStats.poleClimbSpeedFac *= 0.8f;
-                self.slugcatStats.corridorClimbSpeedFac *= 0.8f;
-                self.slugcatStats.runspeedFac *= 0.8f;
+                self.slugcatStats.bodyWeightFac *= Options.BodyWeightFac.Value;
+                self.slugcatStats.generalVisibilityBonus *= Options.VisibilityBonus.Value;
+                self.slugcatStats.visualStealthInSneakMode *= Options.VisualStealthInSneakMode.Value;
+                self.slugcatStats.loudnessFac *= Options.LoudnessFac.Value;
+                self.slugcatStats.lungsFac *= Options.LungsFac.Value;
+                self.slugcatStats.poleClimbSpeedFac *= Options.PoleClimbSpeedFac.Value;
+                self.slugcatStats.corridorClimbSpeedFac *= Options.CorridorClimbSpeedFac.Value;
+                self.slugcatStats.runspeedFac *= Options.RunSpeedFac.Value;
             }
             else
             {
-                self.slugcatStats.bodyWeightFac /= 0.65f;
-                self.slugcatStats.generalVisibilityBonus += 0.2f;
-                self.slugcatStats.visualStealthInSneakMode /= 1.2f;
-                self.slugcatStats.loudnessFac /= 0.5f;
-                self.slugcatStats.lungsFac /= 0.8f;
-                self.slugcatStats.throwingSkill = 0;
-                self.slugcatStats.poleClimbSpeedFac /= 0.8f;
-                self.slugcatStats.corridorClimbSpeedFac /= 0.8f;
-                self.slugcatStats.runspeedFac /= 0.8f;
+                self.slugcatStats.bodyWeightFac /= Options.BodyWeightFac.Value != 0 ? Options.BodyWeightFac.Value : 0.65f;
+                self.slugcatStats.generalVisibilityBonus /= Options.VisibilityBonus.Value != 0 ? Options.VisibilityBonus.Value : 0.8f;
+                self.slugcatStats.visualStealthInSneakMode /= Options.VisualStealthInSneakMode.Value != 0 ? Options.VisualStealthInSneakMode.Value : 1.2f;
+                self.slugcatStats.loudnessFac /= Options.LoudnessFac.Value != 0 ? Options.LoudnessFac.Value : 0.5f;
+                self.slugcatStats.lungsFac /= Options.LungsFac.Value != 0 ? Options.LungsFac.Value : 0.8f;
+                self.slugcatStats.poleClimbSpeedFac /= Options.PoleClimbSpeedFac.Value != 0 ? Options.PoleClimbSpeedFac.Value : 0.8f;
+                self.slugcatStats.corridorClimbSpeedFac /= Options.CorridorClimbSpeedFac.Value != 0 ? Options.CorridorClimbSpeedFac.Value : 0.8f;
+                self.slugcatStats.runspeedFac /= Options.RunSpeedFac.Value != 0 ? Options.RunSpeedFac.Value : 0.8f;
             }
         }
         orig(self, eu);
+        try
+        {
+            int x = 0;
+            int y = 5 / x;
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Error in Player_Update");
+        }
     }
 
     private void Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature abstractCreature, World world)

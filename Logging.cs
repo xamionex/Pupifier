@@ -1,39 +1,69 @@
 using System;
-using System.ComponentModel;
-using System.IO;
+
+#pragma warning disable CS8618
 
 namespace RainMeadowPupifier
 {
     public partial class RainMeadowPupifier
     {
-        private static readonly string logFilePath = Path.Combine(Environment.CurrentDirectory, "RainMeadowPupifier.log");
+        private static string lastErrorMessage;
+        private static int lastErrorCount = 0;
 
-        public static void Log(string message, bool date = true)
+        public static void Log(string message)
         {
-            if (date)
-                message = $"{DateTime.Now:yyyy-MM-dd HH:mm:ss} {message}";
+            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            string log = $"[{timestamp}] {message}";
 
-            File.AppendAllText(logFilePath, message + Environment.NewLine);
-            instance.Logger.LogInfo(message);
+            instance.Logger.LogInfo(log);
         }
 
-        public static void LogError(Exception ex, string? ErrorMessage = null)
+        public static void LogError(Exception exception, string customMessage)
         {
-            Log(new string('-', 80), false);
-            Log("An error has occured!");
-            if (ErrorMessage != null)
+            string errorCore =
+                $"Error Message: {customMessage}\n" +
+                $"Exception Type: {exception.GetType().Name}\n" +
+                $"Error: {exception.Message}\n" +
+                $"StackTrace:\n{exception.StackTrace}";
+            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            string errorDetails =
+                "--------------------------------------------------------------------------------\n" +
+                $"[{timestamp}] An error has occurred!\n" +
+                errorCore + "\n" +
+                "--------------------------------------------------------------------------------";
+
+            if (errorCore == lastErrorMessage)
             {
-                Log($"Error Message: {ErrorMessage}");
+                lastErrorCount++;
+
+                // Log the message after every 100 repetitions
+                if (lastErrorCount % 100 == 0)
+                {
+                    instance.Logger.LogInfo(errorDetails);
+                    Log($"The last message has repeated {lastErrorCount} times.");
+                }
             }
-            Log($"Exception Type: {ex.GetType().Name}", false);
-            Log($"Error: {ex.Message}", false);
-            Log($"StackTrace:\n{ex.StackTrace}", false);
-            if (ex.InnerException != null)
+            else
             {
-                Log("Inner exception: ", false);
-                LogError(ex.InnerException);
+                // Log the repetition count of the last error if applicable
+                if (lastErrorCount > 0)
+                {
+                    string lastErrorDetails =
+                        "--------------------------------------------------------------------------------\n" +
+                        $"[{timestamp}] An error has occurred!\n" +
+                        lastErrorMessage + "\n" +
+                        "--------------------------------------------------------------------------------";
+                    instance.Logger.LogInfo(lastErrorDetails);
+                    Log($"The last message repeated {lastErrorCount} times");
+                    lastErrorCount = 0;
+                }
+
+                // Log the new error message
+
+                instance.Logger.LogInfo(errorDetails);
+
+                // Update the last error message
+                lastErrorMessage = errorCore;
             }
-            Log(new string('-', 80), false);
         }
     }
 }

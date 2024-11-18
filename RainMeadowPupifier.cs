@@ -2,12 +2,12 @@
 using System.Security.Permissions;
 using BepInEx;
 using System.Reflection;
-using IL.Menu.Remix.MixedUI;
 using UnityEngine;
 
 
 [assembly: AssemblyVersion(PluginInfo.PluginVersion)]
 #pragma warning disable CS0618
+#pragma warning disable CS8618
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 namespace RainMeadowPupifier
 {
@@ -42,8 +42,6 @@ namespace RainMeadowPupifier
             {
                 if (IsInit) return;
 
-                Log("Hooking into methods...");
-
                 PlayerHooks();
 
                 Log("Hooked into methods...");
@@ -51,13 +49,14 @@ namespace RainMeadowPupifier
                 On.RainWorldGame.ShutDownProcess += RainWorldGameOnShutDownProcess;
                 On.GameSession.ctor += GameSessionOnctor;
 
-                MachineConnector.SetRegisteredOI("amione.RainMeadowPupifier", Options);
-                Log("Registered OI...");
+                MachineConnector.SetRegisteredOI(PluginInfo.PluginGUID, Options);
+                Log($"Registered OI...");
                 IsInit = true;
+                Log($"Fully initialized!");
             }
             catch (Exception ex)
             {
-                LogError(ex);
+                LogError(ex, $"Failed to initialize mod {PluginInfo.PluginGUID}");
                 throw;
             }
         }
