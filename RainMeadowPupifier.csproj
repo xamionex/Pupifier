@@ -3,8 +3,9 @@
     <TargetFramework>net48</TargetFramework>
     <AssemblyName>amione.RainMeadowPupifier</AssemblyName>
     <Product>Rain Meadow Pupifier</Product>
-    <Version>2.0.8</Version>
+    <ProductDescription>Enables you to become a slugpup in Rain Meadow!</ProductDescription>
     <ModVersion>0.0.2</ModVersion>
+    <Version>2.0.8</Version>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
     <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
@@ -65,20 +66,45 @@
     <Copy SourceFiles="@(BuildFiles)" DestinationFolder="$(ProjectDir)$(RootNamespace)\plugins" />
   </Target>
 
-  <Target Name="UpdateModInfo" AfterTargets="PostBuild">
-    <!-- Read the lines from the modinfo.json file -->
-    <ReadLinesFromFile File="$(ProjectDir)$(RootNamespace)\modinfo.json">
-      <Output TaskParameter="Lines" ItemName="ModJsonLines" />
-    </ReadLinesFromFile>
+  <UsingTask TaskName="RegexReplaceTask" AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll" TaskFactory="RoslynCodeTaskFactory">
+    <ParameterGroup>
+      <InputFile />
+      <VersionValue Required="true" />
+      <AssemblyName Required="true" />
+      <ProductDescription Required="true" />
+      <Product Required="true" />
+    </ParameterGroup>
+    <Task>
+      <Using Namespace="System.IO" />
+      <Using Namespace="System.Text.RegularExpressions" />
+      <Code Type="Fragment" Language="cs">
+        <![CDATA[
+          string content = File.ReadAllText(InputFile);
 
-    <!-- Modify the lines using regex to update fields -->
-    <ItemGroup>
-      <UpdatedModJsonLines Include="@(ModJsonLines)">
-      <Text>$([System.Text.RegularExpressions.Regex]::Replace('%(Identity)', '"version" *: *"[^"]*"', '"version": "$(ModVersion)"'))</Text>
-      </UpdatedModJsonLines>
-    </ItemGroup>
+          // Replace "version"
+          content = Regex.Replace(content, @"""version"":\s*""[^""]*""", $@"""version"": ""{VersionValue}""");
 
-    <!-- Write the updated lines back to the file -->
-    <WriteLinesToFile File="$(ProjectDir)$(RootNamespace)\modinfo.json" Lines="@(UpdatedModJsonLines->'%(Text)')" Overwrite="true" />
+          // Replace "id"
+          content = Regex.Replace(content, @"""id"":\s*""[^""]*""", $@"""id"": ""{AssemblyName}""");
+
+          // Replace "name"
+          content = Regex.Replace(content, @"""name"":\s*""[^""]*""", $@"""name"": ""{Product}""");
+
+          // Replace "description"
+          content = Regex.Replace(content, @"""description"":\s*""[^""]*""", $@"""description"": ""{ProductDescription}""");
+
+          File.WriteAllText(InputFile, content);
+        ]]>
+      </Code>
+    </Task>
+  </UsingTask>
+
+  <Target Name="UpdateModInfo" AfterTargets="Build">
+    <RegexReplaceTask 
+      InputFile="$(ProjectDir)$(RootNamespace)\modinfo.json"
+      VersionValue="$(ModVersion)"
+      AssemblyName="$(AssemblyName)"
+      ProductDescription="$(ProductDescription)"
+      Product="$(Product)" />
   </Target>
 </Project>
