@@ -42,9 +42,15 @@ namespace RainMeadowPupifier
             {
                 if (IsInit) return;
 
-                PlayerHooks();
-
-                Log("Hooked into methods...");
+                if (!BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("elumenix.pupify"))
+                {
+                    PlayerHooks();
+                    Log("Hooked into methods...");
+                }
+                else
+                {
+                    Log("Pupify is installed, we do not support this mod.");
+                }
 
                 On.RainWorldGame.ShutDownProcess += RainWorldGameOnShutDownProcess;
                 On.GameSession.ctor += GameSessionOnctor;

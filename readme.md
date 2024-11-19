@@ -4,20 +4,19 @@ Rain Meadow Pupifier is a mod that allows you to become a slugpup in Rain Meadow
 
 ## Known issues
 
-- Fix saint being bald
-- Confirm whether or not tails are full length for some slugcats (and if they are, fix it)
+- Meadow issues are not related to my mod (grabbing players and breaking if you go thru a pipe...)
+- Report any issues please!
 
 ## Features
 
 - Transform into a slugpup in Rain Meadow.
-- Experience the game from a new perspective.
-- Compatible with other mods like `henpemaz_rainmeadow` and `moreslugcats`.
+- Change your stats based on slugpup relativity
 
 ## Installation
 
 1. Download the latest release of Rain Meadow Pupifier.
 2. Extract the contents of the zip file into your game directory.
-3. Ensure that the required mods (`henpemaz_rainmeadow` and `moreslugcats`) are installed.
+3. Ensure that the required mods (`Rain Meadow` and `More Slugcats`) are installed.
 4. Launch the game and enjoy your new slugpup adventure!
 
 ## Requirements
@@ -32,7 +31,8 @@ Rain Meadow Pupifier is a mod that allows you to become a slugpup in Rain Meadow
 - **amione** - Creator of Rain Meadow Pupifier
 - **youbitchoc** - Helped in development
 - **henpemaz** - Creator of Rain Meadow
-- **Maxi Mol** - Provided Mouse Drag code
+- **Maxi Mol** - For Mouse Drag (It helped me understand some things)
+- **LDani** - For testing the s**t out of my mod (It was kinda encouraging)
 
 ## License
 

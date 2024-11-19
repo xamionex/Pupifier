@@ -53,6 +53,13 @@ namespace RainMeadowPupifier
                     float x = 150f;
                     float y = 540f;
                     float sepr = 40f;
+
+                    if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("elumenix.pupify"))
+                    {
+                        AddText("elumenix.pupify is installed, we do not support this mod.", new Vector2(x, y -= sepr));
+                        return;
+                    }
+
                     AddKeyBinder(SlugpupKey, new Vector2(x, y -= sepr));
 
                     /**************** Stats ****************/

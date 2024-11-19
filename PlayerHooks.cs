@@ -5,6 +5,7 @@ using UnityEngine;
 using MonoMod.RuntimeDetour;
 using MoreSlugcats;
 using RainMeadow;
+using RWCustom;
 
 namespace RainMeadowPupifier;
 
@@ -32,6 +33,7 @@ public partial class RainMeadowPupifier
         IL.PlayerGraphics.DefaultFaceSprite_float += Player_AppendPupCheck;
         IL.PlayerGraphics.DefaultFaceSprite_float_int += Player_AppendPupCheck;
         IL.PlayerGraphics.DrawSprites += Player_AppendPupCheck;
+        On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
         IL.PlayerGraphics.TailSpeckles.DrawSprites += Player_AppendPupCheck;
         IL.PlayerGraphics.Update += Player_AppendPupCheck;
         IL.RainWorld.BuildTokenCache += Player_AppendPupCheck;
@@ -45,7 +47,9 @@ public partial class RainMeadowPupifier
         // we apply these in player_ctor in here
         //IL.SlugcatStats.ctor += Player_AppendPupCheck;
         IL.SlugcatStats.HiddenOrUnplayableSlugcat += Player_AppendPupCheck;
-        IL.SlugcatStats.SlugcatFoodMeter += Player_AppendPupCheck;
+
+        // TODO: Make an onhook instead
+        //IL.SlugcatStats.SlugcatFoodMeter += Player_AppendPupCheck;
 
         // we set isSlugpup, RenderAsPup to playerstate
         new Hook(typeof(Player).GetProperty("isSlugpup").GetGetMethod(), (Func<Player, bool> orig, Player self) => orig(self) || (!self.isNPC && self.playerState.isPup));
@@ -53,6 +57,75 @@ public partial class RainMeadowPupifier
 
         // patch because it checks isSlugpup and tries getting npcStats
         new Hook(typeof(Player).GetProperty("slugcatStats").GetGetMethod(), (Func<Player, SlugcatStats> orig, Player self) => (self.isSlugpup && !self.isNPC) ? self.abstractCreature.world.game.session.characterStats : orig(self));
+    }
+
+    private void PlayerGraphics_DrawSprites(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+    {
+        // Call the original DrawSprites method to handle all default rendering
+        orig(self, sLeaser, rCam, timeStacker, camPos);
+
+        if (!self.player.isNPC && self.player.IsLocal() && !self.player.playerState.isPup)
+        {
+            self.owner.bodyChunkConnections[0].distance = 17f;
+            return;
+        }
+
+        // Check if the player is Saint
+        if (self.player.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Saint)
+        {
+            int headType = 0; // Default to "HeadB0"
+
+            // Change the head sprite to the appropriate type
+            sLeaser.sprites[3].element = Futile.atlasManager.GetElementWithName($"HeadB{headType}");
+        }
+
+        // Draw the tail as a slugpup
+        float num = 0.85f + 0.3f * Mathf.Lerp(self.player.npcStats.Wideness, 0.5f, self.player.playerState.isPup ? 0.5f : 0f);
+        float num2 = (0.75f + 0.5f * self.player.npcStats.Size) * (self.player.playerState.isPup ? 0.5f : 1f);
+
+        self.tail[0].rad = 6f * num;
+        self.tail[0].connectionRad = 4f * num2;
+        //self.tail[0].surfaceFric = 0.85f;
+        //self.tail[0].airFriction = 1f;
+        //self.tail[0].connectedSegment = null;
+        //self.tail[0].affectPrevious = 1f;
+        //self.tail[0].pullInPreviousPosition = true;
+        //self.tail[0].connectedPoint = null;
+        //self.tail[0].Reset(self.player.bodyChunks[1].pos);
+
+        self.tail[1].rad = 4f * num;
+        self.tail[1].connectionRad = 7f * num2;
+        //self.tail[1].surfaceFric = 0.85f;
+        //self.tail[1].airFriction = 1f;
+        //self.tail[1].connectedSegment = self.tail[0];
+        //self.tail[1].affectPrevious = 0.5f;
+        //self.tail[1].pullInPreviousPosition = true;
+        //self.tail[1].connectedPoint = null;
+        //self.tail[1].Reset(self.player.bodyChunks[1].pos);
+
+        self.tail[2].rad = 2.5f * num;
+        self.tail[2].connectionRad = 7f * num2;
+        //self.tail[2].surfaceFric = 0.85f;
+        //self.tail[2].airFriction = 1f;
+        //self.tail[2].connectedSegment = self.tail[1];
+        //self.tail[2].affectPrevious = 0.5f;
+        //self.tail[2].pullInPreviousPosition = true;
+        //self.tail[2].connectedPoint = null;
+        //self.tail[2].Reset(self.player.bodyChunks[1].pos);
+
+        self.tail[3].rad = 1f * num;
+        self.tail[3].connectionRad = 7f * num2;
+        //self.tail[3].surfaceFric = 0.85f;
+        //self.tail[3].airFriction = 1f;
+        //self.tail[3].connectedSegment = self.tail[2];
+        //self.tail[3].affectPrevious = 0.5f;
+        //self.tail[3].pullInPreviousPosition = true;
+        //self.tail[3].connectedPoint = null;
+        //self.tail[3].Reset(self.player.bodyChunks[1].pos);
+
+        // For some reason this fixes legs and tail...
+        // don't ask how much time this took.
+        self.owner.bodyChunkConnections[0].distance = 20f;
     }
 
     private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
@@ -63,7 +136,9 @@ public partial class RainMeadowPupifier
             // we multiply by survivor -> slugpup values (aka difference between survivor and slugpup)
             if (self.playerState.isPup = Options.SlugpupEnabled)
             {
+                // Change body size using setPupStatus
                 self.setPupStatus(Options.SlugpupEnabled);
+                // Set relative stats based on status
                 self.slugcatStats.bodyWeightFac *= Options.BodyWeightFac.Value;
                 self.slugcatStats.generalVisibilityBonus *= Options.VisibilityBonus.Value;
                 self.slugcatStats.visualStealthInSneakMode *= Options.VisualStealthInSneakMode.Value;
@@ -75,7 +150,9 @@ public partial class RainMeadowPupifier
             }
             else
             {
+                // Change body size using setPupStatus
                 self.setPupStatus(Options.SlugpupEnabled);
+                // Set relative stats based on status
                 self.slugcatStats.bodyWeightFac /= Options.BodyWeightFac.Value != 0 ? Options.BodyWeightFac.Value : 0.65f;
                 self.slugcatStats.generalVisibilityBonus /= Options.VisibilityBonus.Value != 0 ? Options.VisibilityBonus.Value : 0.8f;
                 self.slugcatStats.visualStealthInSneakMode /= Options.VisualStealthInSneakMode.Value != 0 ? Options.VisualStealthInSneakMode.Value : 1.2f;
