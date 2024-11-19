@@ -84,15 +84,6 @@ public partial class RainMeadowPupifier
             }
         }
         orig(self, eu);
-        try
-        {
-            int x = 0;
-            int y = 5 / x;
-        }
-        catch (Exception ex)
-        {
-            LogError(ex, "Error in Player_Update");
-        }
     }
 
     private void Player_ctor(On.Player.orig_ctor orig, Player self, AbstractCreature abstractCreature, World world)
