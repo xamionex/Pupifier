@@ -59,9 +59,11 @@ public partial class RainMeadowPupifier
     {
         if (!self.isNPC && Options.SlugpupEnabled != self.playerState.isPup && self.IsLocal() && Options.UseSlugpupStatsToggle.Value)
         {
+            // isPup is changed here, we also use setPupStatus as to fix body not reverting to normal
             // we multiply by survivor -> slugpup values (aka difference between survivor and slugpup)
             if (self.playerState.isPup = Options.SlugpupEnabled)
             {
+                self.setPupStatus(Options.SlugpupEnabled);
                 self.slugcatStats.bodyWeightFac *= Options.BodyWeightFac.Value;
                 self.slugcatStats.generalVisibilityBonus *= Options.VisibilityBonus.Value;
                 self.slugcatStats.visualStealthInSneakMode *= Options.VisualStealthInSneakMode.Value;
@@ -73,6 +75,7 @@ public partial class RainMeadowPupifier
             }
             else
             {
+                self.setPupStatus(Options.SlugpupEnabled);
                 self.slugcatStats.bodyWeightFac /= Options.BodyWeightFac.Value != 0 ? Options.BodyWeightFac.Value : 0.65f;
                 self.slugcatStats.generalVisibilityBonus /= Options.VisibilityBonus.Value != 0 ? Options.VisibilityBonus.Value : 0.8f;
                 self.slugcatStats.visualStealthInSneakMode /= Options.VisualStealthInSneakMode.Value != 0 ? Options.VisualStealthInSneakMode.Value : 1.2f;

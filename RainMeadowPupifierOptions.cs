@@ -167,7 +167,7 @@ namespace RainMeadowPupifier
                 if (c == null)
                     c = Menu.MenuColorEffect.rgbMediumGrey;
 
-                OpKeyBinder keyBinder = new(option, pos, new Vector2(100f, 30f), false)
+                OpKeyBinder keyBinder = new(option, pos, new Vector2(100f, 30f), false, OpKeyBinder.BindController.AnyController)
                 {
                     description = option.info.description,
                     colorEdge = (Color)c
