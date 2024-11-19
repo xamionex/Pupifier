@@ -17,6 +17,7 @@ namespace RainMeadowPupifier
             instance.Logger.LogInfo(log);
         }
 
+        public static int repetition = 1;
         public static void LogError(Exception exception, string customMessage)
         {
             string errorCore =
@@ -25,21 +26,20 @@ namespace RainMeadowPupifier
                 $"Error: {exception.Message}\n" +
                 $"StackTrace:\n{exception.StackTrace}";
             string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            string errorDetails =
-                "--------------------------------------------------------------------------------\n" +
-                $"[{timestamp}] An error has occurred!\n" +
-                errorCore + "\n" +
-                "--------------------------------------------------------------------------------";
 
             if (errorCore == lastErrorMessage)
             {
                 lastErrorCount++;
 
-                // Log the message after every 100 repetitions
-                if (lastErrorCount % 100 == 0)
+                // Log the message anyway after every count * 2 repetitions
+                if (lastErrorCount % repetition == 0)
                 {
-                    instance.Logger.LogInfo(errorDetails);
-                    Log($"The last message has repeated {lastErrorCount} times.");
+                    repetition *= 2;
+                    instance.Logger.LogInfo(new string('-', 80));
+                    instance.Logger.LogInfo($"[{timestamp}] An error has occurred!");
+                    instance.Logger.LogInfo(errorCore);
+                    instance.Logger.LogInfo($"The last message has repeated {lastErrorCount} times.");
+                    instance.Logger.LogInfo(new string('-', 80));
                 }
             }
             else
@@ -47,19 +47,21 @@ namespace RainMeadowPupifier
                 // Log the repetition count of the last error if applicable
                 if (lastErrorCount > 0)
                 {
-                    string lastErrorDetails =
-                        "--------------------------------------------------------------------------------\n" +
-                        $"[{timestamp}] An error has occurred!\n" +
-                        lastErrorMessage + "\n" +
-                        "--------------------------------------------------------------------------------";
-                    instance.Logger.LogInfo(lastErrorDetails);
-                    Log($"The last message repeated {lastErrorCount} times");
+                    instance.Logger.LogInfo(new string('-', 80));
+                    instance.Logger.LogInfo($"[{timestamp}] An error has occurred!");
+                    instance.Logger.LogInfo(errorCore);
+                    instance.Logger.LogInfo($"Repetitions: This error has repeated {lastErrorCount} times");
+                    instance.Logger.LogInfo(new string('-', 80));
                     lastErrorCount = 0;
+                    repetition = 1;
                 }
 
                 // Log the new error message
 
-                instance.Logger.LogInfo(errorDetails);
+                instance.Logger.LogInfo(new string('-', 80));
+                instance.Logger.LogInfo($"[{timestamp}] An error has occurred!");
+                instance.Logger.LogInfo(errorCore);
+                instance.Logger.LogInfo(new string('-', 80));
 
                 // Update the last error message
                 lastErrorMessage = errorCore;
