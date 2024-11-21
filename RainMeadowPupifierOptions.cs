@@ -16,6 +16,7 @@ namespace RainMeadowPupifier
             public readonly Configurable<KeyCode> SlugpupKey;
             public readonly Configurable<bool> UseSlugpupStatsToggle;
             public readonly Configurable<bool> ModAutoDisabledToggle;
+            public readonly Configurable<float> GlobalModifier;
             public readonly Configurable<float> BodyWeightFac;
             public readonly Configurable<float> VisibilityBonus;
             public readonly Configurable<float> VisualStealthInSneakMode;
@@ -32,8 +33,9 @@ namespace RainMeadowPupifier
 
                 // Stats tab
                 UseSlugpupStatsToggle = config.Bind(nameof(UseSlugpupStatsToggle), true, new ConfigurableInfo("If true, stats will be changed to a slugpup's equivalent.", null, "", "Use Relative Slugpup Stats"));
+                GlobalModifier = config.Bind(nameof(GlobalModifier), 1f, new ConfigurableInfo("Multiplies all stats by this value.", null, "", "Global Modifier"));
                 BodyWeightFac = config.Bind(nameof(BodyWeightFac), 0.65f, new ConfigurableInfo("Factor affecting body weight.", null, "", "Body Weight"));
-                VisibilityBonus = config.Bind(nameof(VisibilityBonus), 0.8f, new ConfigurableInfo("Factor affecting visibility.", null, "", "Visibility Bonus"));
+                VisibilityBonus = config.Bind(nameof(VisibilityBonus), 0.8f, new ConfigurableInfo("Factor affecting visibility.", null, "", "Visibility"));
                 VisualStealthInSneakMode = config.Bind(nameof(VisualStealthInSneakMode), 1.2f, new ConfigurableInfo("Factor affecting visual stealth when sneaking.", null, "", "Visual Stealth In Sneak Mode"));
                 LoudnessFac = config.Bind(nameof(LoudnessFac), 0.5f, new ConfigurableInfo("Factor affecting loudness.", null, "", "Loudness"));
                 LungsFac = config.Bind(nameof(LungsFac), 0.8f, new ConfigurableInfo("Factor affecting lung capacity.", null, "", "Lung Capacity"));
@@ -73,19 +75,20 @@ namespace RainMeadowPupifier
                     curTab++;
                     AddTitle();
                     x = 150f;
-                    y = 500f;
+                    y = 540f;
                     sepr = 40f;
                     AddCheckbox(UseSlugpupStatsToggle, new Vector2(x, y -= sepr));
                     AddText("The following stats will multiply our current slugcat stats by the value here", new Vector2(x, y -= sepr));
                     AddText("(current slugcat stat * stat option)", new Vector2(x, y -= sepr));
-                    AddFloatSlider(BodyWeightFac, new Vector2(x, y -= sepr), -2f, 2f, 250);
-                    AddFloatSlider(VisibilityBonus, new Vector2(x, y -= sepr), -2f, 2f, 250);
-                    AddFloatSlider(VisualStealthInSneakMode, new Vector2(x, y -= sepr), -2f, 2f, 250);
-                    AddFloatSlider(LoudnessFac, new Vector2(x, y -= sepr), -2f, 2f, 250);
-                    AddFloatSlider(LungsFac, new Vector2(x, y -= sepr), -2f, 2f, 250);
-                    AddFloatSlider(PoleClimbSpeedFac, new Vector2(x, y -= sepr), -2f, 2f, 250);
-                    AddFloatSlider(CorridorClimbSpeedFac, new Vector2(x, y -= sepr), -2f, 2f, 250);
-                    AddFloatSlider(RunSpeedFac, new Vector2(x, y -= sepr), -2f, 2f, 250);
+                    AddFloatSlider(GlobalModifier, new Vector2(x, y -= sepr), 0.01f, 10f, 250);
+                    AddFloatSlider(BodyWeightFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250);
+                    AddFloatSlider(VisibilityBonus, new Vector2(x, y -= sepr), 0.01f, 5f, 250);
+                    AddFloatSlider(VisualStealthInSneakMode, new Vector2(x, y -= sepr), 0.01f, 5f, 250);
+                    AddFloatSlider(LoudnessFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250);
+                    AddFloatSlider(LungsFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250);
+                    AddFloatSlider(PoleClimbSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250);
+                    AddFloatSlider(CorridorClimbSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250);
+                    AddFloatSlider(RunSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250);
 
                     /**************** Experimental ****************/
                     curTab++;
@@ -132,6 +135,27 @@ namespace RainMeadowPupifier
             private void AddFloatSlider(Configurable<float> option, Vector2 pos, float min = 0, float max = 1, int width = 150)
             {
                 OpFloatSlider slider = new(option, pos, width)
+                {
+                    description = option.info.description,
+                    min = min,
+                    max = max
+                };
+
+                OpLabel label = new(pos.x + width + 18f, pos.y + 2f, option.info.Tags[0] as string)
+                {
+                    description = option.info.description
+                };
+
+                Tabs[curTab].AddItems(new UIelement[]
+                {
+                    slider,
+                    label
+                });
+            }
+
+            private void AddSlider(Configurable<int> option, Vector2 pos, int min = 0, int max = 1, int width = 150)
+            {
+                OpSlider slider = new(option, pos, width)
                 {
                     description = option.info.description,
                     min = min,
