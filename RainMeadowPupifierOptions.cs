@@ -27,7 +27,7 @@ namespace RainMeadowPupifier
             public RainMeadowPupifierOptions()
             {
                 // Pupifier tab
-                SlugpupKey = config.Bind(nameof(SlugpupKey), KeyCode.P, new ConfigurableInfo("Key to toggle between slug and slugpup.", null, "", "Keybind for toggling between pup mode"));
+                SlugpupKey = config.Bind(nameof(SlugpupKey), KeyCode.Alpha0, new ConfigurableInfo("Key to toggle between slug and slugpup.", null, "", "Keybind for toggling between pup mode"));
 
                 // Stats tab
                 UseSlugpupStatsToggle = config.Bind(nameof(UseSlugpupStatsToggle), true, new ConfigurableInfo("If true, stats will be changed to a slugpup's equivalent.", null, "", "Use Relative Slugpup Stats"));
