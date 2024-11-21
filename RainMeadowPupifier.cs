@@ -31,7 +31,7 @@ namespace RainMeadowPupifier
             if (Input.GetKeyDown(Options.SlugpupKey.Value))
             {
                 Options.SlugpupEnabled = !Options.SlugpupEnabled;
-                Options.SlugpupKeyPressed++;
+                Options.SlugpupKeyPressed = true;
             }
         }
 
