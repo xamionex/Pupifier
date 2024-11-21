@@ -170,15 +170,14 @@ public partial class RainMeadowPupifier
 
     private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
     {
-
         if (!self.isNPC && Options.SlugpupEnabled != self.playerState.isPup && self.IsLocal())
         {
             if (!Options.ModAutoDisabled && !Options.ModChecked)
             {
-                if (Options.SlugpupKeyPressed && self.playerState.isPup)
+                if (!Options.SlugpupKeyPressed && self.playerState.isPup && !Options.ModAutoDisabledToggle.Value)
                 {
-                    Options.ModAutoDisabled = true;
                     Log("We detected that you have another mod that is conflicting with Rain Meadow Pupifier. Rain Meadow Pupifier has not changed your slugcat statistics and is effectively disabled.");
+                    Options.ModAutoDisabled = true;
                     Options.ModChecked = true;
                 }
                 else

@@ -15,6 +15,7 @@ namespace RainMeadowPupifier
             public bool SlugpupEnabled = false;
             public readonly Configurable<KeyCode> SlugpupKey;
             public readonly Configurable<bool> UseSlugpupStatsToggle;
+            public readonly Configurable<bool> ModAutoDisabledToggle;
             public readonly Configurable<float> BodyWeightFac;
             public readonly Configurable<float> VisibilityBonus;
             public readonly Configurable<float> VisualStealthInSneakMode;
@@ -39,6 +40,9 @@ namespace RainMeadowPupifier
                 PoleClimbSpeedFac = config.Bind(nameof(PoleClimbSpeedFac), 0.8f, new ConfigurableInfo("Factor affecting pole climb speed.", null, "", "Pole Climb Speed"));
                 CorridorClimbSpeedFac = config.Bind(nameof(CorridorClimbSpeedFac), 0.8f, new ConfigurableInfo("Factor affecting corridor climb speed.", null, "", "Corridor Climb Speed"));
                 RunSpeedFac = config.Bind(nameof(RunSpeedFac), 0.8f, new ConfigurableInfo("Factor affecting run speed.", null, "", "Run Speed"));
+
+                // Experimental tab
+                ModAutoDisabledToggle = config.Bind(nameof(ModAutoDisabledToggle), false, new ConfigurableInfo("If true, Pupifier will not disable itself when other mods are found. This requires a restart", null, "", "Allow Incompatible Mods (Requires Restart)"));
             }
 
             public override void Initialize()
@@ -47,7 +51,7 @@ namespace RainMeadowPupifier
                 {
                     base.Initialize();
 
-                    Tabs = new OpTab[] { new(this, "Pupifier"), new(this, "Stats") };
+                    Tabs = new OpTab[] { new(this, "Pupifier"), new(this, "Stats"), new(this, "Experimental") };
 
                     /**************** Pupifier ****************/
                     curTab = 0;
@@ -82,6 +86,14 @@ namespace RainMeadowPupifier
                     AddFloatSlider(PoleClimbSpeedFac, new Vector2(x, y -= sepr), -2f, 2f, 250);
                     AddFloatSlider(CorridorClimbSpeedFac, new Vector2(x, y -= sepr), -2f, 2f, 250);
                     AddFloatSlider(RunSpeedFac, new Vector2(x, y -= sepr), -2f, 2f, 250);
+
+                    /**************** Experimental ****************/
+                    curTab++;
+                    AddTitle();
+                    x = 150f;
+                    y = 500f;
+                    sepr = 40f;
+                    AddCheckbox(ModAutoDisabledToggle, new Vector2(x, y -= sepr));
 
                     Log("Added all options...");
                 }

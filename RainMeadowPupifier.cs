@@ -43,7 +43,7 @@ namespace RainMeadowPupifier
             {
                 if (IsInit) return;
 
-                if (!BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("elumenix.pupify"))
+                if (!BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("elumenix.pupify") || Options.ModAutoDisabledToggle.Value)
                 {
                     PlayerHooks();
                     Log("Hooked into methods...");
