@@ -10,6 +10,7 @@ namespace RainMeadowPupifier
         {
             public int curTab;
             public int SlugpupKeyPressed = 0;
+            public bool ModChecked = false;
             public bool ModAutoDisabled = false;
             public bool SlugpupEnabled = false;
             public readonly Configurable<KeyCode> SlugpupKey;

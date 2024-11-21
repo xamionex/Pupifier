@@ -31,30 +31,52 @@ public partial class RainMeadowPupifier
         new Hook(typeof(Player).GetProperty("slugcatStats").GetGetMethod(), (Func<Player, SlugcatStats> orig, Player self) => (self.isSlugpup && !self.isNPC) ? self.abstractCreature.world.game.session.characterStats : orig(self));
 
         // Change isSlugpup in specific methods, because changing them in jump and movement will break movement
-        //IL.Player.AddFood += Player_AppendToIsSlugpupCheck;
-        //IL.Player.ClassMechanicsArtificer += Player_AppendToIsSlugpupCheck;
-        //IL.Player.Collide += Player_AppendToIsSlugpupCheck;
-        //IL.Player.Die += Player_AppendToIsSlugpupCheck;
-        //IL.Player.FreeHand += Player_AppendToIsSlugpupCheck;
-        //IL.Player.Grabability += Player_AppendToIsSlugpupCheck;
-        //IL.Player.GrabUpdate += Player_AppendToIsSlugpupCheck;
-        //IL.Player.HeavyCarry += Player_AppendToIsSlugpupCheck;
-        IL.Player.Jump += Player_AppendToIsSlugpupCheck;
+        IL.Player.Jump += Player_FixIsSlugpupOnJump;
         IL.Player.MovementUpdate += Player_AppendToIsSlugpupCheck;
-        //IL.Player.ctor += Player_AppendToIsSlugpupCheck;
-        //IL.Player.SetMalnourished += Player_AppendToIsSlugpupCheck;
-        //IL.Player.ShortCutColor += Player_AppendToIsSlugpupCheck;
-        //IL.Player.SleepUpdate += Player_AppendToIsSlugpupCheck;
-        //IL.Player.SlugcatGrab += Player_AppendToIsSlugpupCheck;
-        //IL.Player.SlugOnBack.GraphicsModuleUpdated += Player_AppendToIsSlugpupCheck;
-        //IL.Player.Update += Player_AppendToIsSlugpupCheck;
-        //IL.Player.UpdateAnimation += Player_AppendToIsSlugpupCheck;
-        //IL.Player.UpdateBodyMode += Player_AppendToIsSlugpupCheck;
-        //IL.Player.WallJump += Player_AppendToIsSlugpupCheck;
-        //IL.PlayerGraphics.MSCUpdate += Player_AppendToIsSlugpupCheck;
 
         // Add this so we get correct hand positions
         IL.SlugcatHand.Update += Player_AppendPupCheck;
+    }
+
+    private void Player_FixIsSlugpupOnJump(ILContext il)
+    {
+        // 136	017F	ldarg.0
+        // 137	0180	call	instance bool Player::get_isSlugpup()
+        // 138	0185	brfalse.s	164 (01BF) ldc.i4.1 
+        try
+        {
+            var c = new ILCursor(il);
+
+            // Match the IL sequence for `call instance bool Player::get_isSlugpup()`
+            int matchCount = 0;
+            while (c.TryGotoNext(MoveType.AfterLabel,
+                i => i.MatchLdarg(0), // Match ldarg.0 instruction
+                i => i.MatchCall(typeof(Player).GetMethod("get_isSlugpup")) // Match call to get_isSlugpup()
+            )) // Match the branch instruction after get_isSlugpup
+            {
+                matchCount++;
+                if (
+                    matchCount == 1 ||
+                    matchCount == 2 ||
+                    matchCount == 3 ||
+                    matchCount == 4 ||
+                    matchCount == 5
+                    )
+                {
+                    Log($"On.Player.Jump isSlugpup {matchCount} is going to be skipped for players");
+                    c.Index += 2;
+                    // Insert the condition directly after get_isSlugpup
+                    c.Emit(OpCodes.Ldarg_0);
+                    c.EmitDelegate((Player player) => player.isNPC);
+                    c.Emit(OpCodes.And);
+                }
+
+            }
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Error in Player_AppendToIsSlugpupCheck");
+        }
     }
 
     private void Player_AppendToIsSlugpupCheck(ILContext il)
@@ -75,13 +97,13 @@ public partial class RainMeadowPupifier
                 c.Index += 2;
                 // Insert the condition directly after get_isSlugpup
                 c.Emit(OpCodes.Ldarg_0);
-                c.EmitDelegate((Player player) => player.isNPC && !player.playerState.isPup);
+                c.EmitDelegate((Player player) => player.isNPC);
                 c.Emit(OpCodes.And);
             }
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            LogError(e, "Error in Player_AppendToIsSlugpupCheck");
+            LogError(ex, "Error in Player_AppendToIsSlugpupCheck");
         }
     }
 
@@ -107,9 +129,9 @@ public partial class RainMeadowPupifier
                 c.EmitDelegate((Player player, bool isSlugpup) => isSlugpup || (!player.isNPC && player.playerState.isPup));
             }
         }
-        catch (Exception e)
+        catch (Exception ex)
         {
-            LogError(e, "Error in Player_AppendPupCheck");
+            LogError(ex, "Error in Player_AppendPupCheck");
         }
     }
 
@@ -151,16 +173,18 @@ public partial class RainMeadowPupifier
 
         if (!self.isNPC && Options.SlugpupEnabled != self.playerState.isPup && self.IsLocal())
         {
-            if (!Options.ModAutoDisabled)
+            if (!Options.ModAutoDisabled && !Options.ModChecked)
             {
                 if (Options.SlugpupKeyPressed == 0 && self.playerState.isPup)
                 {
                     Options.ModAutoDisabled = true;
                     Log("We detected that you have another mod that is conflicting with Rain Meadow Pupifier. Rain Meadow Pupifier has not changed your slugcat statistics, but is still running, please disable your other mod");
+                    Options.ModChecked = true;
                 }
                 else
                 {
                     PlayerOnEnabledHooks();
+                    Options.ModChecked = true;
                 }
             }
 
@@ -169,26 +193,38 @@ public partial class RainMeadowPupifier
                 // setPupStatus sets isPup and also updates body proportions
                 // we multiply by survivor -> slugpup values (aka difference between survivor and slugpup)
                 // Change body size using setPupStatus
-                self.setPupStatus(Options.SlugpupEnabled);
-                AssignStats(self);
+                if (self.playerState.isPup = Options.SlugpupEnabled)
+                {
+                    // Change body size using setPupStatus
+                    self.setPupStatus(Options.SlugpupEnabled);
+                    // Set relative stats based on status
+                    AssignStats(self, true);
+                }
+                else
+                {
+                    // Change body size using setPupStatus
+                    self.setPupStatus(Options.SlugpupEnabled);
+                    // Set relative stats based on status
+                    AssignStats(self, false);
+                }
             }
         }
         orig(self, eu);
     }
 
-    private void AssignStats(Player self)
+    private void AssignStats(Player self, bool Toggle)
     {
         if (!Options.UseSlugpupStatsToggle.Value) return;
-        if (self.playerState.isPup)
+        if (Toggle)
         {
-            self.slugcatStats.bodyWeightFac *= Options.BodyWeightFac.Value;
-            self.slugcatStats.generalVisibilityBonus *= Options.VisibilityBonus.Value;
-            self.slugcatStats.visualStealthInSneakMode *= Options.VisualStealthInSneakMode.Value;
-            self.slugcatStats.loudnessFac *= Options.LoudnessFac.Value;
-            self.slugcatStats.lungsFac *= Options.LungsFac.Value;
-            self.slugcatStats.poleClimbSpeedFac *= Options.PoleClimbSpeedFac.Value;
-            self.slugcatStats.corridorClimbSpeedFac *= Options.CorridorClimbSpeedFac.Value;
-            self.slugcatStats.runspeedFac *= Options.RunSpeedFac.Value;
+            self.slugcatStats.bodyWeightFac *= Options.BodyWeightFac.Value != 0 ? Options.BodyWeightFac.Value : 0.65f;
+            self.slugcatStats.generalVisibilityBonus *= Options.VisibilityBonus.Value != 0 ? Options.VisibilityBonus.Value : 0.8f;
+            self.slugcatStats.visualStealthInSneakMode *= Options.VisualStealthInSneakMode.Value != 0 ? Options.VisualStealthInSneakMode.Value : 1.2f;
+            self.slugcatStats.loudnessFac *= Options.LoudnessFac.Value != 0 ? Options.LoudnessFac.Value : 0.5f;
+            self.slugcatStats.lungsFac *= Options.LungsFac.Value != 0 ? Options.LungsFac.Value : 0.8f;
+            self.slugcatStats.poleClimbSpeedFac *= Options.PoleClimbSpeedFac.Value != 0 ? Options.PoleClimbSpeedFac.Value : 0.8f;
+            self.slugcatStats.corridorClimbSpeedFac *= Options.CorridorClimbSpeedFac.Value != 0 ? Options.CorridorClimbSpeedFac.Value : 0.8f;
+            self.slugcatStats.runspeedFac *= Options.RunSpeedFac.Value != 0 ? Options.RunSpeedFac.Value : 0.8f;
         }
         else
         {
