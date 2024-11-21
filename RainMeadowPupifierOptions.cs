@@ -9,6 +9,8 @@ namespace RainMeadowPupifier
         public partial class RainMeadowPupifierOptions : OptionInterface
         {
             public int curTab;
+            public int SlugpupKeyPressed = 0;
+            public bool ModAutoDisabled = false;
             public bool SlugpupEnabled = false;
             public readonly Configurable<KeyCode> SlugpupKey;
             public readonly Configurable<bool> UseSlugpupStatsToggle;
