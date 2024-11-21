@@ -198,14 +198,15 @@ public partial class RainMeadowPupifier
                     self.setPupStatus(Options.SlugpupEnabled);
                     // Set relative stats based on status
                     if (!Options.UseSlugpupStatsToggle.Value) return;
-                    self.slugcatStats.bodyWeightFac *= Options.BodyWeightFac.Value;
-                    self.slugcatStats.generalVisibilityBonus *= Options.VisibilityBonus.Value;
-                    self.slugcatStats.visualStealthInSneakMode *= Options.VisualStealthInSneakMode.Value;
-                    self.slugcatStats.loudnessFac *= Options.LoudnessFac.Value;
-                    self.slugcatStats.lungsFac *= Options.LungsFac.Value;
-                    self.slugcatStats.poleClimbSpeedFac *= Options.PoleClimbSpeedFac.Value;
-                    self.slugcatStats.corridorClimbSpeedFac *= Options.CorridorClimbSpeedFac.Value;
-                    self.slugcatStats.runspeedFac *= Options.RunSpeedFac.Value;
+                    SlugcatStats newStats = new(self.SlugCatClass, self.Malnourished);
+                    self.slugcatStats.bodyWeightFac = newStats.bodyWeightFac * Options.BodyWeightFac.Value;
+                    self.slugcatStats.generalVisibilityBonus = newStats.generalVisibilityBonus * Options.VisibilityBonus.Value;
+                    self.slugcatStats.visualStealthInSneakMode = newStats.visualStealthInSneakMode * Options.VisualStealthInSneakMode.Value;
+                    self.slugcatStats.loudnessFac = newStats.loudnessFac * Options.LoudnessFac.Value;
+                    self.slugcatStats.lungsFac = newStats.lungsFac * Options.LungsFac.Value;
+                    self.slugcatStats.poleClimbSpeedFac = newStats.poleClimbSpeedFac * Options.PoleClimbSpeedFac.Value;
+                    self.slugcatStats.corridorClimbSpeedFac = newStats.corridorClimbSpeedFac * Options.CorridorClimbSpeedFac.Value;
+                    self.slugcatStats.runspeedFac = newStats.runspeedFac * Options.RunSpeedFac.Value;
                 }
                 else
                 {
@@ -213,14 +214,15 @@ public partial class RainMeadowPupifier
                     self.setPupStatus(Options.SlugpupEnabled);
                     // Set relative stats based on status
                     if (!Options.UseSlugpupStatsToggle.Value) return;
-                    self.slugcatStats.bodyWeightFac /= Options.BodyWeightFac.Value != 0 ? Options.BodyWeightFac.Value : 0.65f;
-                    self.slugcatStats.generalVisibilityBonus /= Options.VisibilityBonus.Value != 0 ? Options.VisibilityBonus.Value : 0.8f;
-                    self.slugcatStats.visualStealthInSneakMode /= Options.VisualStealthInSneakMode.Value != 0 ? Options.VisualStealthInSneakMode.Value : 1.2f;
-                    self.slugcatStats.loudnessFac /= Options.LoudnessFac.Value != 0 ? Options.LoudnessFac.Value : 0.5f;
-                    self.slugcatStats.lungsFac /= Options.LungsFac.Value != 0 ? Options.LungsFac.Value : 0.8f;
-                    self.slugcatStats.poleClimbSpeedFac /= Options.PoleClimbSpeedFac.Value != 0 ? Options.PoleClimbSpeedFac.Value : 0.8f;
-                    self.slugcatStats.corridorClimbSpeedFac /= Options.CorridorClimbSpeedFac.Value != 0 ? Options.CorridorClimbSpeedFac.Value : 0.8f;
-                    self.slugcatStats.runspeedFac /= Options.RunSpeedFac.Value != 0 ? Options.RunSpeedFac.Value : 0.8f;
+                    SlugcatStats newStats = new(self.SlugCatClass, self.Malnourished);
+                    self.slugcatStats.bodyWeightFac = newStats.bodyWeightFac;
+                    self.slugcatStats.generalVisibilityBonus = newStats.generalVisibilityBonus;
+                    self.slugcatStats.visualStealthInSneakMode = newStats.visualStealthInSneakMode;
+                    self.slugcatStats.loudnessFac = newStats.loudnessFac;
+                    self.slugcatStats.lungsFac = newStats.lungsFac;
+                    self.slugcatStats.poleClimbSpeedFac = newStats.poleClimbSpeedFac;
+                    self.slugcatStats.corridorClimbSpeedFac = newStats.corridorClimbSpeedFac;
+                    self.slugcatStats.runspeedFac = newStats.runspeedFac;
                 }
             }
         }
