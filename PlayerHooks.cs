@@ -198,45 +198,34 @@ public partial class RainMeadowPupifier
                     // Change body size using setPupStatus
                     self.setPupStatus(Options.SlugpupEnabled);
                     // Set relative stats based on status
-                    AssignStats(self, true);
+                    if (!Options.UseSlugpupStatsToggle.Value) return;
+                    self.slugcatStats.bodyWeightFac *= Options.BodyWeightFac.Value;
+                    self.slugcatStats.generalVisibilityBonus *= Options.VisibilityBonus.Value;
+                    self.slugcatStats.visualStealthInSneakMode *= Options.VisualStealthInSneakMode.Value;
+                    self.slugcatStats.loudnessFac *= Options.LoudnessFac.Value;
+                    self.slugcatStats.lungsFac *= Options.LungsFac.Value;
+                    self.slugcatStats.poleClimbSpeedFac *= Options.PoleClimbSpeedFac.Value;
+                    self.slugcatStats.corridorClimbSpeedFac *= Options.CorridorClimbSpeedFac.Value;
+                    self.slugcatStats.runspeedFac *= Options.RunSpeedFac.Value;
                 }
                 else
                 {
                     // Change body size using setPupStatus
                     self.setPupStatus(Options.SlugpupEnabled);
                     // Set relative stats based on status
-                    AssignStats(self, false);
+                    if (!Options.UseSlugpupStatsToggle.Value) return;
+                    self.slugcatStats.bodyWeightFac /= Options.BodyWeightFac.Value != 0 ? Options.BodyWeightFac.Value : 0.65f;
+                    self.slugcatStats.generalVisibilityBonus /= Options.VisibilityBonus.Value != 0 ? Options.VisibilityBonus.Value : 0.8f;
+                    self.slugcatStats.visualStealthInSneakMode /= Options.VisualStealthInSneakMode.Value != 0 ? Options.VisualStealthInSneakMode.Value : 1.2f;
+                    self.slugcatStats.loudnessFac /= Options.LoudnessFac.Value != 0 ? Options.LoudnessFac.Value : 0.5f;
+                    self.slugcatStats.lungsFac /= Options.LungsFac.Value != 0 ? Options.LungsFac.Value : 0.8f;
+                    self.slugcatStats.poleClimbSpeedFac /= Options.PoleClimbSpeedFac.Value != 0 ? Options.PoleClimbSpeedFac.Value : 0.8f;
+                    self.slugcatStats.corridorClimbSpeedFac /= Options.CorridorClimbSpeedFac.Value != 0 ? Options.CorridorClimbSpeedFac.Value : 0.8f;
+                    self.slugcatStats.runspeedFac /= Options.RunSpeedFac.Value != 0 ? Options.RunSpeedFac.Value : 0.8f;
                 }
             }
         }
         orig(self, eu);
-    }
-
-    private void AssignStats(Player self, bool Toggle)
-    {
-        if (!Options.UseSlugpupStatsToggle.Value) return;
-        if (Toggle)
-        {
-            self.slugcatStats.bodyWeightFac *= Options.BodyWeightFac.Value != 0 ? Options.BodyWeightFac.Value : 0.65f;
-            self.slugcatStats.generalVisibilityBonus *= Options.VisibilityBonus.Value != 0 ? Options.VisibilityBonus.Value : 0.8f;
-            self.slugcatStats.visualStealthInSneakMode *= Options.VisualStealthInSneakMode.Value != 0 ? Options.VisualStealthInSneakMode.Value : 1.2f;
-            self.slugcatStats.loudnessFac *= Options.LoudnessFac.Value != 0 ? Options.LoudnessFac.Value : 0.5f;
-            self.slugcatStats.lungsFac *= Options.LungsFac.Value != 0 ? Options.LungsFac.Value : 0.8f;
-            self.slugcatStats.poleClimbSpeedFac *= Options.PoleClimbSpeedFac.Value != 0 ? Options.PoleClimbSpeedFac.Value : 0.8f;
-            self.slugcatStats.corridorClimbSpeedFac *= Options.CorridorClimbSpeedFac.Value != 0 ? Options.CorridorClimbSpeedFac.Value : 0.8f;
-            self.slugcatStats.runspeedFac *= Options.RunSpeedFac.Value != 0 ? Options.RunSpeedFac.Value : 0.8f;
-        }
-        else
-        {
-            self.slugcatStats.bodyWeightFac /= Options.BodyWeightFac.Value != 0 ? Options.BodyWeightFac.Value : 0.65f;
-            self.slugcatStats.generalVisibilityBonus /= Options.VisibilityBonus.Value != 0 ? Options.VisibilityBonus.Value : 0.8f;
-            self.slugcatStats.visualStealthInSneakMode /= Options.VisualStealthInSneakMode.Value != 0 ? Options.VisualStealthInSneakMode.Value : 1.2f;
-            self.slugcatStats.loudnessFac /= Options.LoudnessFac.Value != 0 ? Options.LoudnessFac.Value : 0.5f;
-            self.slugcatStats.lungsFac /= Options.LungsFac.Value != 0 ? Options.LungsFac.Value : 0.8f;
-            self.slugcatStats.poleClimbSpeedFac /= Options.PoleClimbSpeedFac.Value != 0 ? Options.PoleClimbSpeedFac.Value : 0.8f;
-            self.slugcatStats.corridorClimbSpeedFac /= Options.CorridorClimbSpeedFac.Value != 0 ? Options.CorridorClimbSpeedFac.Value : 0.8f;
-            self.slugcatStats.runspeedFac /= Options.RunSpeedFac.Value != 0 ? Options.RunSpeedFac.Value : 0.8f;
-        }
     }
 
     private void Player_SlugcatHandUpdate(On.SlugcatHand.orig_Update orig, SlugcatHand self)

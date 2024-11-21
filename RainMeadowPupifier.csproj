@@ -4,7 +4,7 @@
     <AssemblyName>amione.RainMeadowPupifier</AssemblyName>
     <Product>Rain Meadow Pupifier</Product>
     <ProductDescription>Rain Meadow Pupifier is a mod that allows you to become a slugpup in Rain Meadow! This mod enhances your gameplay experience by enabling you to transform into a slugpup, offering a unique perspective and new challenges.</ProductDescription>
-    <ModVersion>0.0.5</ModVersion>
+    <ModVersion>0.0.6</ModVersion>
     <Version>2.0.8</Version>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
