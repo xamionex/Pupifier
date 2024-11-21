@@ -178,7 +178,7 @@ public partial class RainMeadowPupifier
                 if (Options.SlugpupKeyPressed && self.playerState.isPup)
                 {
                     Options.ModAutoDisabled = true;
-                    Log("We detected that you have another mod that is conflicting with Rain Meadow Pupifier. Rain Meadow Pupifier has not changed your slugcat statistics, but is still running, please disable your other mod");
+                    Log("We detected that you have another mod that is conflicting with Rain Meadow Pupifier. Rain Meadow Pupifier has not changed your slugcat statistics and is effectively disabled.");
                     Options.ModChecked = true;
                 }
                 else
