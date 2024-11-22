@@ -169,81 +169,77 @@ public partial class Pupifier
 
     private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
     {
-        try
-        {
-            if (!self.isNPC && Options.SlugpupEnabled != self.playerState.isPup)
-            {
-                Log("Getting if the player is local.");
-                bool IsLocal;
-                if (RainMeadowEnabled)
-                {
-                    IsLocal = PlayerIsLocal(self);
-                    Log(IsLocal ? "Player is local, applying." : "Player is not local, not applying.");
-                }
-                else
-                {
-                    IsLocal = true;
-                    Log("Applying to all players since Rain Meadow isn't enabled.");
-                }
-                if (!Options.ModAutoDisabled && !Options.ModChecked && IsLocal)
-                {
-                    if (!Options.SlugpupKeyPressed && self.playerState.isPup && !Options.ModAutoDisabledToggle.Value)
-                    {
-                        Log("We detected that you have another mod that is conflicting with Pupifier. Pupifier has not changed your slugcat statistics and is effectively disabled.");
-                        Options.ModAutoDisabled = true;
-                        Options.ModChecked = true;
-                    }
-                    else
-                    {
-                        PlayerOnEnabledHooks();
-                        Options.ModChecked = true;
-                    }
-                }
+        Player_ChangeMode(self);
+        orig(self, eu);
+    }
 
-                if (!Options.ModAutoDisabled && IsLocal)
-                {
-                    // setPupStatus sets isPup and also updates body proportions
-                    // we multiply by survivor -> slugpup values (aka difference between survivor and slugpup)
-                    // Change body size using setPupStatus
-                    SlugcatStats newStats = new(self.SlugCatClass, self.Malnourished);
-                    if (self.playerState.isPup = Options.SlugpupEnabled)
-                    {
-                        // Change body size using setPupStatus
-                        self.setPupStatus(Options.SlugpupEnabled);
-                        // Set relative stats based on status
-                        if (!Options.UseSlugpupStatsToggle.Value) return;
-                        self.slugcatStats.bodyWeightFac = newStats.bodyWeightFac * Options.BodyWeightFac.Value * Options.GlobalModifier.Value;
-                        self.slugcatStats.generalVisibilityBonus = newStats.generalVisibilityBonus * Options.VisibilityBonus.Value * Options.GlobalModifier.Value;
-                        self.slugcatStats.visualStealthInSneakMode = newStats.visualStealthInSneakMode * Options.VisualStealthInSneakMode.Value * Options.GlobalModifier.Value;
-                        self.slugcatStats.loudnessFac = newStats.loudnessFac * Options.LoudnessFac.Value * Options.GlobalModifier.Value;
-                        self.slugcatStats.lungsFac = newStats.lungsFac * Options.LungsFac.Value * Options.GlobalModifier.Value;
-                        self.slugcatStats.poleClimbSpeedFac = newStats.poleClimbSpeedFac * Options.PoleClimbSpeedFac.Value * Options.GlobalModifier.Value;
-                        self.slugcatStats.corridorClimbSpeedFac = newStats.corridorClimbSpeedFac * Options.CorridorClimbSpeedFac.Value * Options.GlobalModifier.Value;
-                        self.slugcatStats.runspeedFac = newStats.runspeedFac * Options.RunSpeedFac.Value * Options.GlobalModifier.Value;
-                    }
-                    else
-                    {
-                        // Change body size using setPupStatus
-                        self.setPupStatus(Options.SlugpupEnabled);
-                        // Set relative stats based on status
-                        if (!Options.UseSlugpupStatsToggle.Value) return;
-                        self.slugcatStats.bodyWeightFac = newStats.bodyWeightFac;
-                        self.slugcatStats.generalVisibilityBonus = newStats.generalVisibilityBonus;
-                        self.slugcatStats.visualStealthInSneakMode = newStats.visualStealthInSneakMode;
-                        self.slugcatStats.loudnessFac = newStats.loudnessFac;
-                        self.slugcatStats.lungsFac = newStats.lungsFac;
-                        self.slugcatStats.poleClimbSpeedFac = newStats.poleClimbSpeedFac;
-                        self.slugcatStats.corridorClimbSpeedFac = newStats.corridorClimbSpeedFac;
-                        self.slugcatStats.runspeedFac = newStats.runspeedFac;
-                    }
-                }
+    private void Player_ChangeMode(Player self)
+    {
+        if (self.isNPC && Options.SlugpupEnabled == self.playerState.isPup) return;
+        Log("Getting if the player is local.");
+        bool IsLocal;
+        if (RainMeadowEnabled)
+        {
+            IsLocal = PlayerIsLocal(self);
+            if (IsLocal) Log("Player is local, applying.");
+        }
+        else
+        {
+            IsLocal = true;
+            Log("Applying to all players since Rain Meadow isn't enabled.");
+        }
+        if (!Options.ModAutoDisabled && !Options.ModChecked && IsLocal)
+        {
+            if (!Options.SlugpupKeyPressed && self.playerState.isPup && !Options.ModAutoDisabledToggle.Value)
+            {
+                Log("We detected that you have another mod that is conflicting with Pupifier. Pupifier has not changed your slugcat statistics and is effectively disabled.");
+                Options.ModAutoDisabled = true;
+                Options.ModChecked = true;
+            }
+            else
+            {
+                PlayerOnEnabledHooks();
+                Options.ModChecked = true;
             }
         }
-        catch (Exception ex)
+
+        if (!Options.ModAutoDisabled && !IsLocal) return;
+        // setPupStatus sets isPup and also updates body proportions
+        // we multiply by survivor -> slugpup values (aka difference between survivor and slugpup)
+        // Change body size using setPupStatus
+        SlugcatStats newStats = new(self.SlugCatClass, self.Malnourished);
+        if (self.playerState.isPup = Options.SlugpupEnabled)
         {
-            LogError(ex, "Failed to update player");
+            Log($"Set pup status for this player to {Options.SlugpupEnabled}");
+            // Change body size using setPupStatus
+            self.setPupStatus(Options.SlugpupEnabled);
+            // Set relative stats based on status
+            if (!Options.UseSlugpupStatsToggle.Value) return;
+            self.slugcatStats.bodyWeightFac = newStats.bodyWeightFac * Options.BodyWeightFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.generalVisibilityBonus = newStats.generalVisibilityBonus * Options.VisibilityBonus.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.visualStealthInSneakMode = newStats.visualStealthInSneakMode * Options.VisualStealthInSneakMode.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.loudnessFac = newStats.loudnessFac * Options.LoudnessFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.lungsFac = newStats.lungsFac * Options.LungsFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.poleClimbSpeedFac = newStats.poleClimbSpeedFac * Options.PoleClimbSpeedFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.corridorClimbSpeedFac = newStats.corridorClimbSpeedFac * Options.CorridorClimbSpeedFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.runspeedFac = newStats.runspeedFac * Options.RunSpeedFac.Value * Options.GlobalModifier.Value;
         }
-        orig(self, eu);
+        else
+        {
+            Log($"Set pup status for this player to {Options.SlugpupEnabled}");
+            // Change body size using setPupStatus
+            self.setPupStatus(Options.SlugpupEnabled);
+            // Set relative stats based on status
+            if (!Options.UseSlugpupStatsToggle.Value) return;
+            self.slugcatStats.bodyWeightFac = newStats.bodyWeightFac;
+            self.slugcatStats.generalVisibilityBonus = newStats.generalVisibilityBonus;
+            self.slugcatStats.visualStealthInSneakMode = newStats.visualStealthInSneakMode;
+            self.slugcatStats.loudnessFac = newStats.loudnessFac;
+            self.slugcatStats.lungsFac = newStats.lungsFac;
+            self.slugcatStats.poleClimbSpeedFac = newStats.poleClimbSpeedFac;
+            self.slugcatStats.corridorClimbSpeedFac = newStats.corridorClimbSpeedFac;
+            self.slugcatStats.runspeedFac = newStats.runspeedFac;
+        }
     }
 
     private void Player_SlugcatHandUpdate(On.SlugcatHand.orig_Update orig, SlugcatHand self)
