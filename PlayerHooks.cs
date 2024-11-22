@@ -175,7 +175,7 @@ public partial class Pupifier
 
     private void Player_ChangeMode(Player self)
     {
-        if (self.isNPC && Options.SlugpupEnabled == self.playerState.isPup) return;
+        if (self.isNPC || Options.SlugpupEnabled == self.isSlugpup || Options.SlugpupEnabled == self.playerState.isPup) return;
         Log("Getting if the player is local.");
         bool IsLocal;
         if (RainMeadowEnabled)
@@ -190,7 +190,7 @@ public partial class Pupifier
         }
         if (!Options.ModAutoDisabled && !Options.ModChecked && IsLocal)
         {
-            if (!Options.SlugpupKeyPressed && self.playerState.isPup && !Options.ModAutoDisabledToggle.Value)
+            if (!Options.SlugpupKeyPressed && (self.playerState.isPup || self.isSlugpup) && !Options.ModAutoDisabledToggle.Value)
             {
                 Log("We detected that you have another mod that is conflicting with Pupifier. Pupifier has not changed your slugcat statistics and is effectively disabled.");
                 Options.ModAutoDisabled = true;
@@ -203,12 +203,12 @@ public partial class Pupifier
             }
         }
 
-        if (!Options.ModAutoDisabled && !IsLocal) return;
+        if (Options.ModAutoDisabled || !IsLocal) return;
         // setPupStatus sets isPup and also updates body proportions
         // we multiply by survivor -> slugpup values (aka difference between survivor and slugpup)
         // Change body size using setPupStatus
         SlugcatStats newStats = new(self.SlugCatClass, self.Malnourished);
-        if (self.playerState.isPup = Options.SlugpupEnabled)
+        if (Options.SlugpupEnabled)
         {
             Log($"Set pup status for this player to {Options.SlugpupEnabled}");
             // Change body size using setPupStatus
