@@ -17,7 +17,7 @@ namespace RainMeadowPupifier
     {
         public static RainMeadowPupifier instance;
         public static RainMeadowPupifierOptions Options;
-        public bool RainMeadowEnabled = false;
+        public bool RainMeadowEnabled;
 
         public void OnEnable()
         {
@@ -47,14 +47,18 @@ namespace RainMeadowPupifier
 
                 if (!BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("elumenix.pupify") || Options.ModAutoDisabledToggle.Value)
                 {
-                    PlayerHooks();
-                    Log("Hooked into methods...");
                     if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("henpemaz.rainmeadow"))
                     {
                         Log("RainMeadow is installed. Enabling compatibility");
                         RainMeadowEnabled = true;
                     }
-                    else Log("RainMeadow isn't installed. Skipping checks.");
+                    else
+                    {
+                        Log("RainMeadow isn't installed. Skipping checks.");
+                        RainMeadowEnabled = false;
+                    }
+                    PlayerHooks();
+                    Log("Hooked into methods...");
                 }
                 else
                 {

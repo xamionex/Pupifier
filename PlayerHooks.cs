@@ -174,7 +174,7 @@ public partial class RainMeadowPupifier
             if (!self.isNPC && Options.SlugpupEnabled != self.playerState.isPup)
             {
                 Log("Getting if the player is local.");
-                bool IsLocal = true;
+                bool IsLocal;
                 if (RainMeadowEnabled)
                 {
                     IsLocal = PlayerIsLocal(self);
@@ -182,6 +182,7 @@ public partial class RainMeadowPupifier
                 }
                 else
                 {
+                    IsLocal = true;
                     Log("Applying to all players since Rain Meadow isn't enabled.");
                 }
                 if (!Options.ModAutoDisabled && !Options.ModChecked && IsLocal)
