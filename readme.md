@@ -1,6 +1,6 @@
-# Rain Meadow Pupifier
+# Pupifier
 
-Rain Meadow Pupifier is a mod that allows you to become a slugpup in Rain Meadow! This mod enhances your gameplay experience by enabling you to transform into a slugpup, offering a unique perspective and new challenges.
+Pupifier is a mod that allows you to become a slugpup in Rain Meadow! This mod enhances your gameplay experience by enabling you to transform into a slugpup, offering a unique perspective and new challenges.
 
 ## Known issues
 
@@ -14,7 +14,7 @@ Rain Meadow Pupifier is a mod that allows you to become a slugpup in Rain Meadow
 
 ## Installation
 
-1. Download the latest release of Rain Meadow Pupifier.
+1. Download the latest release of Pupifier.
 2. Extract the contents of the zip file into your game directory.
 3. Ensure that the required mods (`Rain Meadow` and `More Slugcats`) are installed.
 4. Launch the game and enjoy your new slugpup adventure!
@@ -28,7 +28,7 @@ Rain Meadow Pupifier is a mod that allows you to become a slugpup in Rain Meadow
 
 ## Credits
 
-- **amione** - Creator of Rain Meadow Pupifier
+- **amione** - Creator of Pupifier
 - **youbitchoc** - Helped in development
 - **henpemaz** - Creator of Rain Meadow
 - **Maxi Mol** - For Mouse Drag (It helped me understand some things)

@@ -483,4 +483,5 @@ $RECYCLE.BIN/
 # Vim temporary swap files
 *.swp
 
-[Rr]ain[Mm]eadow[Pp]upifier/plugins/*
+[Pp]upifier/plugins/*
+Pupifier.zip

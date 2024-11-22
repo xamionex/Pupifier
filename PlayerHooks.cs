@@ -5,9 +5,9 @@ using UnityEngine;
 using MonoMod.RuntimeDetour;
 using MoreSlugcats;
 
-namespace RainMeadowPupifier;
+namespace Pupifier;
 
-public partial class RainMeadowPupifier
+public partial class Pupifier
 {
     private void PlayerHooks()
     {
@@ -189,7 +189,7 @@ public partial class RainMeadowPupifier
                 {
                     if (!Options.SlugpupKeyPressed && self.playerState.isPup && !Options.ModAutoDisabledToggle.Value)
                     {
-                        Log("We detected that you have another mod that is conflicting with Rain Meadow Pupifier. Rain Meadow Pupifier has not changed your slugcat statistics and is effectively disabled.");
+                        Log("We detected that you have another mod that is conflicting with Pupifier. Pupifier has not changed your slugcat statistics and is effectively disabled.");
                         Options.ModAutoDisabled = true;
                         Options.ModChecked = true;
                     }

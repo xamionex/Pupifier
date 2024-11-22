@@ -2,9 +2,9 @@ using System;
 
 #pragma warning disable CS8618
 
-namespace RainMeadowPupifier
+namespace Pupifier
 {
-    public partial class RainMeadowPupifier
+    public partial class Pupifier
     {
         private static string lastErrorMessage;
         private static int lastErrorCount = 0;

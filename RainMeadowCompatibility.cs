@@ -1,8 +1,8 @@
 using RainMeadow;
 
-namespace RainMeadowPupifier
+namespace Pupifier
 {
-    public partial class RainMeadowPupifier
+    public partial class Pupifier
     {
         public static bool PlayerIsLocal(Player player)
         {
