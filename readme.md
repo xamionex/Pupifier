@@ -28,11 +28,11 @@ Pupifier is a mod that allows you to become a slugpup in Rain Meadow! This mod e
 
 ## Credits
 
-- **amione** - Creator of Pupifier
-- **youbitchoc** - Helped in development
-- **henpemaz** - Creator of Rain Meadow
-- **Maxi Mol** - For Mouse Drag (It helped me understand some things)
-- **LDani** - For testing the s**t out of my mod (It was kinda encouraging)
+- **amione** - Creator
+- **youbitchoc** - For helping in development
+- **henpemaz** - For Rain Meadow
+- **Maxi Mol** - For Mouse Drag code
+- **LDani**, **simichan1227** - For testing the s**t out of my mod (It was kinda encouraging)
 
 ## License
 
