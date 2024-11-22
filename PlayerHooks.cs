@@ -4,7 +4,6 @@ using System;
 using UnityEngine;
 using MonoMod.RuntimeDetour;
 using MoreSlugcats;
-using RainMeadow;
 
 namespace RainMeadowPupifier;
 
@@ -172,9 +171,20 @@ public partial class RainMeadowPupifier
     {
         try
         {
-            if (!self.isNPC && Options.SlugpupEnabled != self.playerState.isPup && self.IsLocal())
+            if (!self.isNPC && Options.SlugpupEnabled != self.playerState.isPup)
             {
-                if (!Options.ModAutoDisabled && !Options.ModChecked)
+                Log("Getting if the player is local.");
+                bool IsLocal = true;
+                if (RainMeadowEnabled)
+                {
+                    IsLocal = PlayerIsLocal(self);
+                    Log(IsLocal ? "Player is local, applying." : "Player is not local, not applying.");
+                }
+                else
+                {
+                    Log("Applying to all players since Rain Meadow isn't enabled.");
+                }
+                if (!Options.ModAutoDisabled && !Options.ModChecked && IsLocal)
                 {
                     if (!Options.SlugpupKeyPressed && self.playerState.isPup && !Options.ModAutoDisabledToggle.Value)
                     {
@@ -189,7 +199,7 @@ public partial class RainMeadowPupifier
                     }
                 }
 
-                if (!Options.ModAutoDisabled)
+                if (!Options.ModAutoDisabled && IsLocal)
                 {
                     // setPupStatus sets isPup and also updates body proportions
                     // we multiply by survivor -> slugpup values (aka difference between survivor and slugpup)

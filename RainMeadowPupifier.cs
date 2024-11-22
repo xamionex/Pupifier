@@ -11,11 +11,13 @@ using UnityEngine;
 [assembly: SecurityPermission(SecurityAction.RequestMinimum, SkipVerification = true)]
 namespace RainMeadowPupifier
 {
+    [BepInDependency("henpemaz.rainmeadow", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(PluginInfo.PluginGUID, PluginInfo.PluginName, PluginInfo.PluginVersion)]
     public partial class RainMeadowPupifier : BaseUnityPlugin
     {
         public static RainMeadowPupifier instance;
         public static RainMeadowPupifierOptions Options;
+        public bool RainMeadowEnabled = false;
 
         public void OnEnable()
         {
@@ -47,6 +49,12 @@ namespace RainMeadowPupifier
                 {
                     PlayerHooks();
                     Log("Hooked into methods...");
+                    if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("henpemaz.rainmeadow"))
+                    {
+                        Log("RainMeadow is installed. Enabling compatibility");
+                        RainMeadowEnabled = true;
+                    }
+                    else Log("RainMeadow isn't installed. Skipping checks.");
                 }
                 else
                 {

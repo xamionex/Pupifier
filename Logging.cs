@@ -37,7 +37,7 @@ namespace RainMeadowPupifier
                     repetition *= 2;
                     instance.Logger.LogInfo(new string('-', 80));
                     instance.Logger.LogInfo($"[{timestamp}] An error has occurred!");
-                    instance.Logger.LogInfo(errorCore);
+                    instance.Logger.LogError(exception);
                     instance.Logger.LogInfo($"The last message has repeated {lastErrorCount} times.");
                     instance.Logger.LogInfo(new string('-', 80));
                 }
@@ -49,7 +49,7 @@ namespace RainMeadowPupifier
                 {
                     instance.Logger.LogInfo(new string('-', 80));
                     instance.Logger.LogInfo($"[{timestamp}] An error has occurred!");
-                    instance.Logger.LogInfo(errorCore);
+                    instance.Logger.LogError(exception);
                     instance.Logger.LogInfo($"Repetitions: This error has repeated {lastErrorCount} times");
                     instance.Logger.LogInfo(new string('-', 80));
                     lastErrorCount = 0;
@@ -60,7 +60,7 @@ namespace RainMeadowPupifier
 
                 instance.Logger.LogInfo(new string('-', 80));
                 instance.Logger.LogInfo($"[{timestamp}] An error has occurred!");
-                instance.Logger.LogInfo(errorCore);
+                instance.Logger.LogError(exception);
                 instance.Logger.LogInfo(new string('-', 80));
 
                 // Update the last error message
