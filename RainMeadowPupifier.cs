@@ -30,7 +30,7 @@ namespace RainMeadowPupifier
         private void Update()
         {
             if (!IsInit || Options == null) return;
-            if (Input.GetKeyDown(Options.SlugpupKey.Value))
+            if (Input.GetKeyDown(Options.SlugpupKey.Value) || (Options.UseSecondaryKeyToggle.Value && Input.GetKeyDown(Options.SlugpupKeyController.Value)))
             {
                 Options.SlugpupEnabled = !Options.SlugpupEnabled;
                 Options.SlugpupKeyPressed = true;

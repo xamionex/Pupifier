@@ -1,5 +1,7 @@
 using Menu.Remix.MixedUI;
 using System;
+using System.Drawing.Drawing2D;
+using System.Runtime.Remoting.Channels;
 using UnityEngine;
 
 namespace RainMeadowPupifier
@@ -14,6 +16,8 @@ namespace RainMeadowPupifier
             public bool ModAutoDisabled = false;
             public bool SlugpupEnabled = false;
             public readonly Configurable<KeyCode> SlugpupKey;
+            public readonly Configurable<bool> UseSecondaryKeyToggle;
+            public readonly Configurable<KeyCode> SlugpupKeyController;
             public readonly Configurable<bool> UseSlugpupStatsToggle;
             public readonly Configurable<bool> ModAutoDisabledToggle;
             public readonly Configurable<float> GlobalModifier;
@@ -29,7 +33,9 @@ namespace RainMeadowPupifier
             public RainMeadowPupifierOptions()
             {
                 // Pupifier tab
-                SlugpupKey = config.Bind(nameof(SlugpupKey), KeyCode.Alpha0, new ConfigurableInfo("Key to toggle between slug and slugpup.", null, "", "Keybind for toggling between pup mode"));
+                SlugpupKey = config.Bind(nameof(SlugpupKey), KeyCode.Alpha0, new ConfigurableInfo("Key to toggle pup mode.", null, "", "Keybind for toggling between pup mode"));
+                UseSecondaryKeyToggle = config.Bind(nameof(UseSecondaryKeyToggle), true, new ConfigurableInfo("If true, the secondary key will be used to toggle pup mode.", null, "", "Use Secondary Key to Toggle Pup Mode"));
+                SlugpupKeyController = config.Bind(nameof(SlugpupKeyController), KeyCode.JoystickButton3, new ConfigurableInfo("Secondary Key to toggle pup mode, useful for controllers.", null, "", "Secondary Keybind for toggling between pup mode, useful for controllers"));
 
                 // Stats tab
                 UseSlugpupStatsToggle = config.Bind(nameof(UseSlugpupStatsToggle), true, new ConfigurableInfo("If true, stats will be changed to a slugpup's equivalent.", null, "", "Use Relative Slugpup Stats"));
@@ -56,12 +62,12 @@ namespace RainMeadowPupifier
                     Tabs = new OpTab[] { new(this, "Pupifier"), new(this, "Stats"), new(this, "Experimental") };
 
                     /**************** Pupifier ****************/
+                    Color DarkRed = new(0.7f, 0f, 0f); // dark red
                     curTab = 0;
                     AddTitle();
-                    // Center after title
-                    float x = 150f;
+                    float x = 80f;
                     float y = 540f;
-                    float sepr = 40f;
+                    float sepr = 30f;
 
                     if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("elumenix.pupify"))
                     {
@@ -69,34 +75,37 @@ namespace RainMeadowPupifier
                         return;
                     }
 
-                    AddKeyBinder(SlugpupKey, new Vector2(x, y -= sepr));
+                    AddKeyBinder(SlugpupKey, new Vector2(x, y -= sepr), Color.green, Color.green);
+                    AddCheckbox(UseSecondaryKeyToggle, new Vector2(x, y -= sepr), Color.yellow, Color.yellow);
+                    AddKeyBinder(SlugpupKeyController, new Vector2(x, y -= sepr + 6f), Color.yellow, Color.yellow);
 
                     /**************** Stats ****************/
                     curTab++;
                     AddTitle();
                     x = 150f;
                     y = 540f;
+                    sepr = 30f;
+                    AddCheckbox(UseSlugpupStatsToggle, new Vector2(x, y -= sepr), Color.green, Color.green);
+                    AddText("The following stats will multiply our current slugcat stats by the value here", new Vector2(x, y -= sepr), Color.gray);
+                    AddText("(current slugcat stat * stat option)", new Vector2(x, y -= sepr), Color.gray);
                     sepr = 40f;
-                    AddCheckbox(UseSlugpupStatsToggle, new Vector2(x, y -= sepr));
-                    AddText("The following stats will multiply our current slugcat stats by the value here", new Vector2(x, y -= sepr));
-                    AddText("(current slugcat stat * stat option)", new Vector2(x, y -= sepr));
-                    AddFloatSlider(GlobalModifier, new Vector2(x, y -= sepr), 0.01f, 10f, 250);
-                    AddFloatSlider(BodyWeightFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250);
-                    AddFloatSlider(VisibilityBonus, new Vector2(x, y -= sepr), 0.01f, 5f, 250);
-                    AddFloatSlider(VisualStealthInSneakMode, new Vector2(x, y -= sepr), 0.01f, 5f, 250);
-                    AddFloatSlider(LoudnessFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250);
-                    AddFloatSlider(LungsFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250);
-                    AddFloatSlider(PoleClimbSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250);
-                    AddFloatSlider(CorridorClimbSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250);
-                    AddFloatSlider(RunSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250);
+                    AddFloatSlider(GlobalModifier, new Vector2(x, y -= sepr), 0.01f, 10f, 250, Color.red, Color.red, Color.red);
+                    AddFloatSlider(BodyWeightFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.yellow, Color.yellow, Color.yellow);
+                    AddFloatSlider(VisibilityBonus, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.gray, Color.gray, Color.gray);
+                    AddFloatSlider(VisualStealthInSneakMode, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.gray, Color.gray, Color.gray);
+                    AddFloatSlider(LoudnessFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.magenta, Color.magenta, Color.magenta);
+                    AddFloatSlider(LungsFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.cyan, Color.cyan, Color.cyan);
+                    AddFloatSlider(PoleClimbSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, DarkRed, DarkRed, DarkRed);
+                    AddFloatSlider(CorridorClimbSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, DarkRed, DarkRed, DarkRed);
+                    AddFloatSlider(RunSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, DarkRed, DarkRed, DarkRed);
 
                     /**************** Experimental ****************/
                     curTab++;
                     AddTitle();
                     x = 150f;
-                    y = 500f;
-                    sepr = 40f;
-                    AddCheckbox(ModAutoDisabledToggle, new Vector2(x, y -= sepr));
+                    y = 540f;
+                    sepr = 30f;
+                    AddCheckbox(ModAutoDisabledToggle, new Vector2(x, y -= sepr), Color.red, Color.red, Color.red);
 
                     Log("Added all options...");
                 }
@@ -122,9 +131,15 @@ namespace RainMeadowPupifier
                 });
             }
 
-            private void AddText(string text, Vector2 pos)
+            private void AddText(string text, Vector2 pos, Color? clr = null)
             {
-                OpLabel label = new(pos, new Vector2(300f, 30f), text, FLabelAlignment.Center);
+                if (clr == null)
+                    clr = Menu.MenuColorEffect.rgbMediumGrey;
+
+                OpLabel label = new(pos, new Vector2(300f, 30f), text)
+                {
+                    color = (Color)clr,
+                };
 
                 Tabs[curTab].AddItems(new UIelement[]
                 {
@@ -132,18 +147,28 @@ namespace RainMeadowPupifier
                 });
             }
 
-            private void AddFloatSlider(Configurable<float> option, Vector2 pos, float min = 0, float max = 1, int width = 150)
+            private void AddFloatSlider(Configurable<float> option, Vector2 pos, float min = 0, float max = 1, int width = 150, Color? clr = null, Color? clrline = null, Color? clrtext = null)
             {
+                if (clr == null)
+                    clr = Menu.MenuColorEffect.rgbMediumGrey;
+                if (clrline == null)
+                    clrline = Menu.MenuColorEffect.rgbMediumGrey;
+                if (clrtext == null)
+                    clrtext = Menu.MenuColorEffect.rgbMediumGrey;
+
                 OpFloatSlider slider = new(option, pos, width)
                 {
                     description = option.info.description,
                     min = min,
-                    max = max
+                    max = max,
+                    colorEdge = (Color)clr,
+                    colorLine = (Color)clrline
                 };
 
-                OpLabel label = new(pos.x + width + 18f, pos.y + 2f, option.info.Tags[0] as string)
+                OpLabel label = new(pos.x + width + 18f, pos.y + 6f, option.info.Tags[0] as string)
                 {
-                    description = option.info.description
+                    description = option.info.description,
+                    color = (Color)clrtext
                 };
 
                 Tabs[curTab].AddItems(new UIelement[]
@@ -153,18 +178,28 @@ namespace RainMeadowPupifier
                 });
             }
 
-            private void AddSlider(Configurable<int> option, Vector2 pos, int min = 0, int max = 1, int width = 150)
+            private void AddSlider(Configurable<int> option, Vector2 pos, int min = 0, int max = 1, int width = 150, Color? clr = null, Color? clrline = null, Color? clrtext = null)
             {
+                if (clr == null)
+                    clr = Menu.MenuColorEffect.rgbMediumGrey;
+                if (clrline == null)
+                    clrline = Menu.MenuColorEffect.rgbMediumGrey;
+                if (clrtext == null)
+                    clrtext = Menu.MenuColorEffect.rgbMediumGrey;
+
                 OpSlider slider = new(option, pos, width)
                 {
                     description = option.info.description,
                     min = min,
-                    max = max
+                    max = max,
+                    colorEdge = (Color)clr,
+                    colorLine = (Color)clrline
                 };
 
                 OpLabel label = new(pos.x + width + 18f, pos.y + 2f, option.info.Tags[0] as string)
                 {
-                    description = option.info.description
+                    description = option.info.description,
+                    color = (Color)clrtext
                 };
 
                 Tabs[curTab].AddItems(new UIelement[]
@@ -183,21 +218,26 @@ namespace RainMeadowPupifier
             }
 
 
-            private void AddCheckbox(Configurable<bool> option, Vector2 pos, Color? c = null)
+            private void AddCheckbox(Configurable<bool> option, Vector2 pos, Color? clr = null, Color? clrfill = null, Color? clrtext = null)
             {
-                if (c == null)
-                    c = Menu.MenuColorEffect.rgbMediumGrey;
+                if (clr == null)
+                    clr = Menu.MenuColorEffect.rgbMediumGrey;
+                if (clrfill == null)
+                    clrfill = Menu.MenuColorEffect.rgbMediumGrey;
+                if (clrtext == null)
+                    clrtext = Menu.MenuColorEffect.rgbMediumGrey;
 
                 OpCheckBox checkbox = new(option, pos)
                 {
                     description = option.info.description,
-                    colorEdge = (Color)c
+                    colorEdge = (Color)clr,
+                    colorFill = (Color)clrfill
                 };
 
                 OpLabel label = new(pos.x + 40f, pos.y + 2f, option.info.Tags[0] as string)
                 {
                     description = option.info.description,
-                    color = (Color)c
+                    color = (Color)clrtext
                 };
 
                 Tabs[curTab].AddItems(new UIelement[]
@@ -208,21 +248,26 @@ namespace RainMeadowPupifier
             }
 
 
-            private void AddKeyBinder(Configurable<KeyCode> option, Vector2 pos, Color? c = null)
+            private void AddKeyBinder(Configurable<KeyCode> option, Vector2 pos, Color? clr = null, Color? clrfill = null, Color? clrtext = null)
             {
-                if (c == null)
-                    c = Menu.MenuColorEffect.rgbMediumGrey;
+                if (clr == null)
+                    clr = Menu.MenuColorEffect.rgbMediumGrey;
+                if (clrfill == null)
+                    clrfill = Menu.MenuColorEffect.rgbMediumGrey;
+                if (clrtext == null)
+                    clrtext = Menu.MenuColorEffect.rgbMediumGrey;
 
                 OpKeyBinder keyBinder = new(option, pos, new Vector2(100f, 30f), false, OpKeyBinder.BindController.AnyController)
                 {
                     description = option.info.description,
-                    colorEdge = (Color)c
+                    colorEdge = (Color)clr,
+                    colorFill = (Color)clrfill
                 };
 
                 OpLabel label = new(pos.x + 100f + 16f, pos.y + 5f, option.info.Tags[0] as string)
                 {
                     description = option.info.description,
-                    color = (Color)c
+                    color = (Color)clrtext
                 };
 
                 Tabs[curTab].AddItems(new UIelement[]
@@ -232,12 +277,18 @@ namespace RainMeadowPupifier
                 });
             }
 
-
-            private void AddComboBox(Configurable<string> option, Vector2 pos, string[] array, float width = 80f, FLabelAlignment alH = FLabelAlignment.Center, OpLabel.LabelVAlignment alV = OpLabel.LabelVAlignment.Center)
+            private void AddComboBox(Configurable<string> option, Vector2 pos, string[] array, float width = 80f, FLabelAlignment alH = FLabelAlignment.Center, OpLabel.LabelVAlignment alV = OpLabel.LabelVAlignment.Center, Color? clr = null, Color? clrfill = null)
             {
+                if (clr == null)
+                    clr = Menu.MenuColorEffect.rgbMediumGrey;
+                if (clrfill == null)
+                    clrfill = Menu.MenuColorEffect.rgbMediumGrey;
+
                 OpComboBox box = new(option, pos, width, array)
                 {
-                    description = option.info.description
+                    description = option.info.description,
+                    colorEdge = (Color)clr,
+                    colorFill = (Color)clrfill
                 };
 
                 Vector2 offset = new();
@@ -275,12 +326,22 @@ namespace RainMeadowPupifier
             }
 
 
-            private void AddTextBox<T>(Configurable<T> option, Vector2 pos, float width = 150f)
+            private void AddTextBox<T>(Configurable<T> option, Vector2 pos, float width = 150f, Color? clr = null, Color? clrfill = null, Color? clrtext = null)
             {
+                if (clr == null)
+                    clr = Menu.MenuColorEffect.rgbMediumGrey;
+                if (clrfill == null)
+                    clrfill = Menu.MenuColorEffect.rgbMediumGrey;
+                if (clrtext == null)
+                    clrtext = Menu.MenuColorEffect.rgbMediumGrey;
+
                 OpTextBox component = new(option, pos, width)
                 {
                     allowSpace = true,
-                    description = option.info.description
+                    description = option.info.description,
+                    colorEdge = (Color)clr,
+                    colorFill = (Color)clrfill,
+                    colorText = (Color)clrtext
                 };
 
                 OpLabel label = new(pos.x + width + 18f, pos.y + 2f, option.info.Tags[0] as string)
