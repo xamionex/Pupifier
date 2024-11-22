@@ -176,7 +176,6 @@ public partial class Pupifier
     private void Player_ChangeMode(Player self)
     {
         if (self.isNPC || Options.SlugpupEnabled == self.isSlugpup || Options.SlugpupEnabled == self.playerState.isPup) return;
-        Log("Getting if the player is local.");
         bool IsLocal;
         if (RainMeadowEnabled)
         {
