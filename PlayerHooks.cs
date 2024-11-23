@@ -84,7 +84,8 @@ public partial class Pupifier
         }
 
         // originally 4
-        self.jumpBoost *= Options.JumpPowerFac.Value + additionalModifier;
+        additionalModifier += Options.UseSlugpupStatsToggle.Value ? Options.JumpPowerFac.Value : 0.5f;
+        self.jumpBoost *= additionalModifier;
     }
 
     private void Player_AppendToIsSlugpupCheck(ILContext il)
