@@ -31,11 +31,22 @@ public partial class Pupifier
         // In jump if isSlugpup is true, it breaks jumping off pipes, this is an individual match count IL
         IL.Player.Jump += Player_AppendToIsSlugpupCheck;
         On.Player.Jump += Player_Jump;
+        On.Player.WallJump += Player_WallJump;
         // In movement if it's true we can keep walking into walls, which shouldn't happen
         IL.Player.MovementUpdate += Player_AppendToIsSlugpupCheck;
 
         // Add this so we get correct hand positions
         IL.SlugcatHand.Update += Player_AppendPupCheck;
+    }
+
+    private void Player_WallJump(On.Player.orig_WallJump orig, Player self, int direction)
+    {
+        orig(self, direction);
+        if (!self.playerState.isPup || self.isNPC) return;
+        self.bodyChunks[0].vel.y *= Options.WallJumpPowerFac.Value;
+        self.bodyChunks[1].vel.y *= Options.WallJumpPowerFac.Value;
+        self.bodyChunks[0].vel.x *= Options.WallJumpPowerFac.Value;
+        self.bodyChunks[1].vel.x *= Options.WallJumpPowerFac.Value;
     }
 
     private void Player_Jump(On.Player.orig_Jump orig, Player self)
