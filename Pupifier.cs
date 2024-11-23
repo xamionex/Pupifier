@@ -30,10 +30,9 @@ namespace Pupifier
         private void Update()
         {
             if (!IsInit || Options == null) return;
-            if (Input.GetKeyDown(Options.SlugpupKey.Value) || (Options.UseSecondaryKeyToggle.Value && Input.GetKeyDown(Options.SlugpupKeyController.Value)))
+            if (Input.GetKeyDown(Options.SlugpupKey.Value) || (Options.UseSecondaryKeyToggle.Value && Input.GetKeyDown(Options.SlugpupSecondaryKey.Value)))
             {
-                Options.SlugpupEnabled = !Options.SlugpupEnabled;
-                Options.SlugpupKeyPressed = true;
+                SlugpupEnabled = !SlugpupEnabled;
             }
         }
 

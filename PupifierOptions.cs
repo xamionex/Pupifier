@@ -1,7 +1,5 @@
 using Menu.Remix.MixedUI;
 using System;
-using System.Drawing.Drawing2D;
-using System.Runtime.Remoting.Channels;
 using UnityEngine;
 
 namespace Pupifier
@@ -11,13 +9,9 @@ namespace Pupifier
         public partial class PupifierOptions : OptionInterface
         {
             public int curTab;
-            public bool SlugpupKeyPressed = false;
-            public bool ModChecked = false;
-            public bool ModAutoDisabled = false;
-            public bool SlugpupEnabled = false;
             public readonly Configurable<KeyCode> SlugpupKey;
             public readonly Configurable<bool> UseSecondaryKeyToggle;
-            public readonly Configurable<KeyCode> SlugpupKeyController;
+            public readonly Configurable<KeyCode> SlugpupSecondaryKey;
             public readonly Configurable<bool> UseSlugpupStatsToggle;
             public readonly Configurable<bool> ModAutoDisabledToggle;
             public readonly Configurable<float> GlobalModifier;
@@ -35,7 +29,7 @@ namespace Pupifier
                 // Pupifier tab
                 SlugpupKey = config.Bind(nameof(SlugpupKey), KeyCode.Alpha0, new ConfigurableInfo("Key to toggle pup mode.", null, "", "Keybind for toggling between pup mode"));
                 UseSecondaryKeyToggle = config.Bind(nameof(UseSecondaryKeyToggle), true, new ConfigurableInfo("If true, the secondary key will be used to toggle pup mode.", null, "", "Use Secondary Key to Toggle Pup Mode"));
-                SlugpupKeyController = config.Bind(nameof(SlugpupKeyController), KeyCode.JoystickButton3, new ConfigurableInfo("Secondary Key to toggle pup mode, useful for controllers.", null, "", "Secondary Keybind for toggling between pup mode, useful for controllers"));
+                SlugpupSecondaryKey = config.Bind(nameof(SlugpupSecondaryKey), KeyCode.JoystickButton3, new ConfigurableInfo("Secondary Key to toggle pup mode, useful for controllers.", null, "", "Secondary Keybind for toggling between pup mode, useful for controllers"));
 
                 // Stats tab
                 UseSlugpupStatsToggle = config.Bind(nameof(UseSlugpupStatsToggle), true, new ConfigurableInfo("If true, stats will be changed to a slugpup's equivalent.", null, "", "Use Relative Slugpup Stats"));
@@ -77,7 +71,7 @@ namespace Pupifier
 
                     AddKeyBinder(SlugpupKey, new Vector2(x, y -= sepr), Color.green, Color.green);
                     AddCheckbox(UseSecondaryKeyToggle, new Vector2(x, y -= sepr), Color.yellow, Color.yellow);
-                    AddKeyBinder(SlugpupKeyController, new Vector2(x, y -= sepr + 6f), Color.yellow, Color.yellow);
+                    AddKeyBinder(SlugpupSecondaryKey, new Vector2(x, y -= sepr + 6f), Color.yellow, Color.yellow);
 
                     /**************** Stats ****************/
                     curTab++;

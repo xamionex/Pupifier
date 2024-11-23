@@ -12,10 +12,7 @@ public partial class Pupifier
     private void PlayerHooks()
     {
         On.Player.Update += Player_Update;
-    }
 
-    private void PlayerOnEnabledHooks()
-    {
         On.Player.setPupStatus += Player_SetPupStatus;
         On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
         On.SlugcatHand.Update += Player_SlugcatHandUpdate;
@@ -29,8 +26,10 @@ public partial class Pupifier
         // patch because it checks isSlugpup and tries getting npcStats
         new Hook(typeof(Player).GetProperty("slugcatStats").GetGetMethod(), (Func<Player, SlugcatStats> orig, Player self) => (self.isSlugpup && !self.isNPC) ? self.abstractCreature.world.game.session.characterStats : orig(self));
 
-        // Change isSlugpup in specific methods, because changing them in jump and movement will break movement
+        // Change isSlugpup in specific methods
+        // In jump if isSlugpup is true, it breaks jumping off pipes, this is an individual match count IL
         IL.Player.Jump += Player_FixIsSlugpupOnJump;
+        // In movement if it's true we can keep walking into walls, which shouldn't happen
         IL.Player.MovementUpdate += Player_AppendToIsSlugpupCheck;
 
         // Add this so we get correct hand positions
@@ -138,18 +137,26 @@ public partial class Pupifier
     {
         orig(self, set);
 
-        if (self.graphicsModule is PlayerGraphics playerGraphics)
+        try
         {
-            float tail = 0.85f + 0.3f * Mathf.Lerp(1, 0.5f, self.playerState.isPup ? 0.5f : 0f);
-            float tailConnection = (0.75f + 0.5f * 1) * (self.playerState.isPup ? 0.5f : 1f);
-            playerGraphics.tail[0].rad = 6f * tail;
-            playerGraphics.tail[0].connectionRad = 4f * tailConnection;
-            playerGraphics.tail[1].rad = 4f * tail;
-            playerGraphics.tail[1].connectionRad = 7f * tailConnection;
-            playerGraphics.tail[2].rad = 2.5f * tail;
-            playerGraphics.tail[2].connectionRad = 7f * tailConnection;
-            playerGraphics.tail[3].rad = 1f * tail;
-            playerGraphics.tail[3].connectionRad = 7f * tailConnection;
+            if (self.graphicsModule is PlayerGraphics playerGraphics)
+            {
+                Log("Changed our tail.");
+                float tail = 0.85f + 0.3f * Mathf.Lerp(1, 0.5f, self.playerState.isPup ? 0.5f : 0f);
+                float tailConnection = (0.75f + 0.5f * 1) * (self.playerState.isPup ? 0.5f : 1f);
+                playerGraphics.tail[0].rad = 6f * tail;
+                playerGraphics.tail[0].connectionRad = 4f * tailConnection;
+                playerGraphics.tail[1].rad = 4f * tail;
+                playerGraphics.tail[1].connectionRad = 7f * tailConnection;
+                playerGraphics.tail[2].rad = 2.5f * tail;
+                playerGraphics.tail[2].connectionRad = 7f * tailConnection;
+                playerGraphics.tail[3].rad = 1f * tail;
+                playerGraphics.tail[3].connectionRad = 7f * tailConnection;
+            }
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Error in Player_SetPupStatus");
         }
     }
 
@@ -157,13 +164,18 @@ public partial class Pupifier
     {
         // Call the original DrawSprites method to handle all default rendering
         orig(self, sLeaser, rCam, timeStacker, camPos);
+        if (self.player.isNPC || !self.player.playerState.isPup) return;
 
-        if (!self.player.isNPC && self.player.playerState.isPup)
+        try
         {
             if (self.player.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Saint)
             {
                 sLeaser.sprites[3].element = Futile.atlasManager.GetElementWithName($"HeadB0");
             }
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Error in PlayerGraphics_DrawSprites");
         }
     }
 
@@ -173,47 +185,25 @@ public partial class Pupifier
         orig(self, eu);
     }
 
+    public bool SlugpupEnabled = false;
     private void Player_ChangeMode(Player self)
     {
-        if (self.isNPC || Options.SlugpupEnabled == self.isSlugpup || Options.SlugpupEnabled == self.playerState.isPup) return;
-        bool IsLocal;
-        if (RainMeadowEnabled)
-        {
-            IsLocal = PlayerIsLocal(self);
-            if (IsLocal) Log("Player is local, applying.");
-        }
-        else
-        {
-            IsLocal = true;
-            Log("Applying to all players since Rain Meadow isn't enabled.");
-        }
-        if (!Options.ModAutoDisabled && !Options.ModChecked && IsLocal)
-        {
-            if (!Options.SlugpupKeyPressed && (self.playerState.isPup || self.isSlugpup) && !Options.ModAutoDisabledToggle.Value)
-            {
-                Log("We detected that you have another mod that is conflicting with Pupifier. Pupifier has not changed your slugcat statistics and is effectively disabled.");
-                Options.ModAutoDisabled = true;
-                Options.ModChecked = true;
-            }
-            else
-            {
-                PlayerOnEnabledHooks();
-                Options.ModChecked = true;
-            }
-        }
+        if (self.isNPC || SlugpupEnabled == self.playerState.isPup) return;
+        bool LocalPlayer = false;
+        if (RainMeadowEnabled) LocalPlayer = PlayerIsLocal(self);
+        if (RainMeadowEnabled && !LocalPlayer) return;
 
-        if (Options.ModAutoDisabled || !IsLocal) return;
         // setPupStatus sets isPup and also updates body proportions
         // we multiply by survivor -> slugpup values (aka difference between survivor and slugpup)
         // Change body size using setPupStatus
         SlugcatStats newStats = new(self.SlugCatClass, self.Malnourished);
-        if (Options.SlugpupEnabled)
+        Log($"Set pup status for this {(LocalPlayer ? "local " : "")}player to {SlugpupEnabled}, RainMeadow is {(RainMeadowEnabled ? "enabled" : "disabled")}");
+        // Change body size using setPupStatus
+        self.setPupStatus(SlugpupEnabled);
+        // Set relative stats based on status
+        if (!Options.UseSlugpupStatsToggle.Value) return;
+        if (SlugpupEnabled)
         {
-            Log($"Set pup status for this player to {Options.SlugpupEnabled}");
-            // Change body size using setPupStatus
-            self.setPupStatus(Options.SlugpupEnabled);
-            // Set relative stats based on status
-            if (!Options.UseSlugpupStatsToggle.Value) return;
             self.slugcatStats.bodyWeightFac = newStats.bodyWeightFac * Options.BodyWeightFac.Value * Options.GlobalModifier.Value;
             self.slugcatStats.generalVisibilityBonus = newStats.generalVisibilityBonus * Options.VisibilityBonus.Value * Options.GlobalModifier.Value;
             self.slugcatStats.visualStealthInSneakMode = newStats.visualStealthInSneakMode * Options.VisualStealthInSneakMode.Value * Options.GlobalModifier.Value;
@@ -225,11 +215,6 @@ public partial class Pupifier
         }
         else
         {
-            Log($"Set pup status for this player to {Options.SlugpupEnabled}");
-            // Change body size using setPupStatus
-            self.setPupStatus(Options.SlugpupEnabled);
-            // Set relative stats based on status
-            if (!Options.UseSlugpupStatsToggle.Value) return;
             self.slugcatStats.bodyWeightFac = newStats.bodyWeightFac;
             self.slugcatStats.generalVisibilityBonus = newStats.generalVisibilityBonus;
             self.slugcatStats.visualStealthInSneakMode = newStats.visualStealthInSneakMode;
