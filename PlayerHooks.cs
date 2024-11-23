@@ -186,13 +186,26 @@ public partial class Pupifier
     }
 
     public bool SlugpupEnabled = false;
+    bool LocalPlayer = false;
     private void Player_ChangeMode(Player self)
     {
         if (self.isNPC || SlugpupEnabled == self.playerState.isPup) return;
-        bool LocalPlayer = false;
         if (RainMeadowEnabled) LocalPlayer = PlayerIsLocal(self);
+        else LocalPlayer = false;
         if (RainMeadowEnabled && !LocalPlayer) return;
 
+        try
+        {
+            Player_SetMode(self);
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Error in Player_Update");
+        }
+    }
+
+    private void Player_SetMode(Player self)
+    {
         // setPupStatus sets isPup and also updates body proportions
         // we multiply by survivor -> slugpup values (aka difference between survivor and slugpup)
         // Change body size using setPupStatus
