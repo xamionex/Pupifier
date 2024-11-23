@@ -45,7 +45,7 @@ namespace Pupifier
                 CorridorClimbSpeedFac = config.Bind(nameof(CorridorClimbSpeedFac), 0.8f, new ConfigurableInfo("Factor affecting corridor climb speed.", null, "", "Corridor Climb Speed"));
                 RunSpeedFac = config.Bind(nameof(RunSpeedFac), 0.8f, new ConfigurableInfo("Factor affecting run speed.", null, "", "Run Speed"));
                 JumpPowerFac = config.Bind(nameof(JumpPowerFac), 0.5f, new ConfigurableInfo("Factor affecting jump power.", null, "", "Jump Power"));
-                WallJumpPowerFac = config.Bind(nameof(WallJumpPowerFac), 1f, new ConfigurableInfo("Factor affecting wall jump power.", null, "", "Wall Jump Power Multiplier (Multiplies already applied)"));
+                WallJumpPowerFac = config.Bind(nameof(WallJumpPowerFac), 1f, new ConfigurableInfo("Factor affecting wall jump power. (Additive, i.e. you set 1.2 to be 20% better at wall jumping)", null, "", "Wall Jump Power Multiplier"));
 
                 // Experimental tab
                 ModAutoDisabledToggle = config.Bind(nameof(ModAutoDisabledToggle), false, new ConfigurableInfo("If true, Pupifier will not disable itself when other mods are found. This requires a restart", null, "", "Allow Incompatible Mods (Requires Restart)"));
@@ -85,18 +85,19 @@ namespace Pupifier
                     AddCheckbox(UseSlugpupStatsToggle, new Vector2(x, y -= sepr), Color.green, Color.green);
                     AddText("The following stats will multiply our current slugcat stats by the value here", new Vector2(x, y -= sepr), Color.gray);
                     AddText("(current slugcat stat * stat option)", new Vector2(x, y -= sepr), Color.gray);
+                    x = 0f;
                     sepr = 30f;
-                    AddFloatSlider(GlobalModifier, new Vector2(x, y -= sepr), 0.01f, 10f, 250, Color.red, Color.red, Color.red);
-                    AddFloatSlider(BodyWeightFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.yellow, Color.yellow, Color.yellow);
-                    AddFloatSlider(VisibilityBonus, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.gray, Color.gray, Color.gray);
-                    AddFloatSlider(VisualStealthInSneakMode, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.gray, Color.gray, Color.gray);
-                    AddFloatSlider(LoudnessFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.magenta, Color.magenta, Color.magenta);
-                    AddFloatSlider(LungsFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.cyan, Color.cyan, Color.cyan);
-                    AddFloatSlider(PoleClimbSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.blue, Color.blue, Color.blue);
-                    AddFloatSlider(CorridorClimbSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.blue, Color.blue, Color.blue);
-                    AddFloatSlider(RunSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.blue, Color.blue, Color.blue);
-                    AddFloatSlider(JumpPowerFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.blue, Color.blue, Color.blue);
-                    AddFloatSlider(WallJumpPowerFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.blue, Color.blue, Color.blue);
+                    AddFloatSlider(GlobalModifier, new Vector2(x, y -= sepr), 0.01f, 10f, 400, Color.red, Color.red, Color.red);
+                    AddFloatSlider(BodyWeightFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.yellow, Color.yellow, Color.yellow);
+                    AddFloatSlider(VisibilityBonus, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.gray, Color.gray, Color.gray);
+                    AddFloatSlider(VisualStealthInSneakMode, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.gray, Color.gray, Color.gray);
+                    AddFloatSlider(LoudnessFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.magenta, Color.magenta, Color.magenta);
+                    AddFloatSlider(LungsFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.cyan, Color.cyan, Color.cyan);
+                    AddFloatSlider(PoleClimbSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.blue, Color.blue, Color.blue);
+                    AddFloatSlider(CorridorClimbSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.blue, Color.blue, Color.blue);
+                    AddFloatSlider(RunSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.blue, Color.blue, Color.blue);
+                    AddFloatSlider(JumpPowerFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.blue, Color.blue, Color.blue);
+                    AddFloatSlider(WallJumpPowerFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.blue, Color.blue, Color.blue);
 
                     /**************** Experimental ****************/
                     curTab++;
