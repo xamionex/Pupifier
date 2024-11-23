@@ -4,6 +4,7 @@ using System;
 using UnityEngine;
 using MonoMod.RuntimeDetour;
 using MoreSlugcats;
+using System.Collections.Generic;
 
 namespace Pupifier;
 
@@ -28,7 +29,8 @@ public partial class Pupifier
 
         // Change isSlugpup in specific methods
         // In jump if isSlugpup is true, it breaks jumping off pipes, this is an individual match count IL
-        IL.Player.Jump += Player_FixIsSlugpupOnJump;
+        IL.Player.Jump += Player_AppendToIsSlugpupCheck;
+        On.Player.Jump += Player_Jump;
         // In movement if it's true we can keep walking into walls, which shouldn't happen
         IL.Player.MovementUpdate += Player_AppendToIsSlugpupCheck;
 
@@ -36,45 +38,53 @@ public partial class Pupifier
         IL.SlugcatHand.Update += Player_AppendPupCheck;
     }
 
-    private void Player_FixIsSlugpupOnJump(ILContext il)
+    private void Player_Jump(On.Player.orig_Jump orig, Player self)
     {
-        // 136	017F	ldarg.0
-        // 137	0180	call	instance bool Player::get_isSlugpup()
-        // 138	0185	brfalse.s	164 (01BF) ldc.i4.1 
-        try
+        orig(self);
+        if (!self.playerState.isPup || self.isNPC) return;
+
+        float additionalModifier = 0f;
+
+        if (self.bodyMode != Player.BodyModeIndex.CorridorClimb &&
+            self.animation != Player.AnimationIndex.ClimbOnBeam &&
+            self.animation != Player.AnimationIndex.BellySlide &&
+            !(self.animation == Player.AnimationIndex.ZeroGSwim || self.animation == Player.AnimationIndex.ZeroGPoleGrab) &&
+            !(self.animation == Player.AnimationIndex.DownOnFours &&
+            self.bodyChunks[1].ContactPoint.y < 0 &&
+            self.input[0].downDiagonal == self.flipDirection))
         {
-            var c = new ILCursor(il);
-
-            // Match the IL sequence for `call instance bool Player::get_isSlugpup()`
-            int matchCount = 0;
-            while (c.TryGotoNext(MoveType.AfterLabel,
-                i => i.MatchLdarg(0), // Match ldarg.0 instruction
-                i => i.MatchCall(typeof(Player).GetMethod("get_isSlugpup")) // Match call to get_isSlugpup()
-            )) // Match the branch instruction after get_isSlugpup
+            if (self.standing)
             {
-                matchCount++;
-                if (
-                    matchCount == 1 ||
-                    matchCount == 2 ||
-                    matchCount == 3 ||
-                    matchCount == 4 ||
-                    matchCount == 5
-                    )
+                if (self.slideCounter > 0 && self.slideCounter < 10)
                 {
-                    Log($"On.Player.Jump isSlugpup {matchCount} is going to be skipped for players");
-                    c.Index += 2;
-                    // Insert the condition directly after get_isSlugpup
-                    c.Emit(OpCodes.Ldarg_0);
-                    c.EmitDelegate((Player player) => player.isNPC);
-                    c.Emit(OpCodes.And);
-                }
+                    // self.jumpBoost = 5f;
+                    // if (self.isRivulet)
+                    // {
+                    //     self.jumpBoost = 9f;
+                    //     if (self.isGourmand && ModManager.Expedition && Custom.rainWorld.ExpeditionMode)
+                    //     {
+                    //         self.jumpBoost = Mathf.Lerp(8f, 2f, self.aerobicLevel);
+                    //     }
+                    // }
 
+                    // originally 3
+                    additionalModifier = 0.1f;
+                }
+                else
+                {
+                    // originally 7
+                    additionalModifier = 0.375f;
+                }
+            }
+            else
+            {
+                // originally 6
+                additionalModifier = 0.25f;
             }
         }
-        catch (Exception ex)
-        {
-            LogError(ex, "Error in Player_AppendToIsSlugpupCheck");
-        }
+
+        // originally 4
+        self.jumpBoost *= Options.JumpPowerFac.Value + additionalModifier;
     }
 
     private void Player_AppendToIsSlugpupCheck(ILContext il)
@@ -204,12 +214,17 @@ public partial class Pupifier
         }
     }
 
+    private static readonly Dictionary<SlugcatStats.Name, SlugcatStats> slugcatStatsDictionary = new() { };
     private void Player_SetMode(Player self)
     {
         // setPupStatus sets isPup and also updates body proportions
         // we multiply by survivor -> slugpup values (aka difference between survivor and slugpup)
         // Change body size using setPupStatus
-        SlugcatStats newStats = new(self.SlugCatClass, self.Malnourished);
+        if (!slugcatStatsDictionary.TryGetValue(self.SlugCatClass, out SlugcatStats newStats))
+        {
+            newStats = new(self.SlugCatClass, self.Malnourished);
+            slugcatStatsDictionary.Add(self.SlugCatClass, newStats);
+        }
         Log($"Set pup status for this {(LocalPlayer ? "local " : "")}player to {SlugpupEnabled}, RainMeadow is {(RainMeadowEnabled ? "enabled" : "disabled")}");
         // Change body size using setPupStatus
         self.setPupStatus(SlugpupEnabled);

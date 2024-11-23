@@ -23,6 +23,7 @@ namespace Pupifier
             public readonly Configurable<float> PoleClimbSpeedFac;
             public readonly Configurable<float> CorridorClimbSpeedFac;
             public readonly Configurable<float> RunSpeedFac;
+            public readonly Configurable<float> JumpPowerFac;
 
             public PupifierOptions()
             {
@@ -37,11 +38,12 @@ namespace Pupifier
                 BodyWeightFac = config.Bind(nameof(BodyWeightFac), 0.65f, new ConfigurableInfo("Factor affecting body weight.", null, "", "Body Weight"));
                 VisibilityBonus = config.Bind(nameof(VisibilityBonus), 0.8f, new ConfigurableInfo("Factor affecting visibility.", null, "", "Visibility"));
                 VisualStealthInSneakMode = config.Bind(nameof(VisualStealthInSneakMode), 1.2f, new ConfigurableInfo("Factor affecting visual stealth when sneaking.", null, "", "Visual Stealth In Sneak Mode"));
-                LoudnessFac = config.Bind(nameof(LoudnessFac), 0.5f, new ConfigurableInfo("Factor affecting loudness.", null, "", "Loudness"));
+                LoudnessFac = config.Bind(nameof(LoudnessFac), 0.5f, new ConfigurableInfo("Factor affecting how loud you are.", null, "", "Loudness"));
                 LungsFac = config.Bind(nameof(LungsFac), 0.8f, new ConfigurableInfo("Factor affecting lung capacity.", null, "", "Lung Capacity"));
                 PoleClimbSpeedFac = config.Bind(nameof(PoleClimbSpeedFac), 0.8f, new ConfigurableInfo("Factor affecting pole climb speed.", null, "", "Pole Climb Speed"));
                 CorridorClimbSpeedFac = config.Bind(nameof(CorridorClimbSpeedFac), 0.8f, new ConfigurableInfo("Factor affecting corridor climb speed.", null, "", "Corridor Climb Speed"));
                 RunSpeedFac = config.Bind(nameof(RunSpeedFac), 0.8f, new ConfigurableInfo("Factor affecting run speed.", null, "", "Run Speed"));
+                JumpPowerFac = config.Bind(nameof(JumpPowerFac), 0.5f, new ConfigurableInfo("Factor affecting jump power.", null, "", "Jump Power"));
 
                 // Experimental tab
                 ModAutoDisabledToggle = config.Bind(nameof(ModAutoDisabledToggle), false, new ConfigurableInfo("If true, Pupifier will not disable itself when other mods are found. This requires a restart", null, "", "Allow Incompatible Mods (Requires Restart)"));
@@ -56,7 +58,6 @@ namespace Pupifier
                     Tabs = new OpTab[] { new(this, "Pupifier"), new(this, "Stats"), new(this, "Experimental") };
 
                     /**************** Pupifier ****************/
-                    Color DarkRed = new(0.7f, 0f, 0f); // dark red
                     curTab = 0;
                     AddTitle();
                     float x = 80f;
@@ -89,9 +90,10 @@ namespace Pupifier
                     AddFloatSlider(VisualStealthInSneakMode, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.gray, Color.gray, Color.gray);
                     AddFloatSlider(LoudnessFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.magenta, Color.magenta, Color.magenta);
                     AddFloatSlider(LungsFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.cyan, Color.cyan, Color.cyan);
-                    AddFloatSlider(PoleClimbSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, DarkRed, DarkRed, DarkRed);
-                    AddFloatSlider(CorridorClimbSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, DarkRed, DarkRed, DarkRed);
-                    AddFloatSlider(RunSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, DarkRed, DarkRed, DarkRed);
+                    AddFloatSlider(PoleClimbSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.blue, Color.blue, Color.blue);
+                    AddFloatSlider(CorridorClimbSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.blue, Color.blue, Color.blue);
+                    AddFloatSlider(RunSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.blue, Color.blue, Color.blue);
+                    AddFloatSlider(JumpPowerFac, new Vector2(x, y -= sepr), 0.01f, 5f, 250, Color.blue, Color.blue, Color.blue);
 
                     /**************** Experimental ****************/
                     curTab++;
