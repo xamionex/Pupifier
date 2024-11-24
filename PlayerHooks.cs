@@ -30,8 +30,11 @@ public partial class Pupifier
         // Change isSlugpup in specific methods
         // In jump if isSlugpup is true, it breaks jumping off pipes, this is an individual match count IL
         IL.Player.Jump += Player_AppendToIsSlugpupCheck;
+
+        // For assistance and stats
         On.Player.Jump += Player_Jump;
         On.Player.WallJump += Player_WallJump;
+
         // In movement if it's true we can keep walking into walls, which shouldn't happen
         IL.Player.MovementUpdate += Player_AppendToIsSlugpupCheck;
 
@@ -211,7 +214,7 @@ public partial class Pupifier
     bool LocalPlayer = false;
     private void Player_ChangeMode(Player self)
     {
-        if (self.isNPC || SlugpupEnabled == self.playerState.isPup) return;
+        if (self.isNPC || SlugpupEnabled == self.playerState.isPup || self == null) return;
         if (RainMeadowEnabled) LocalPlayer = PlayerIsLocal(self);
         else LocalPlayer = false;
         if (RainMeadowEnabled && !LocalPlayer) return;
