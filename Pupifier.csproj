@@ -4,7 +4,7 @@
     <AssemblyName>amione.Pupifier</AssemblyName>
     <Product>Pupifier</Product>
     <ProductDescription>Pupifier is a mod that allows you to become a slugpup in Rain World! This mod enhances your gameplay experience by enabling you to transform into a slugpup, offering a unique perspective and new challenges. Additionally, this mod was made for Rain Meadow but works normally as well!</ProductDescription>
-    <ModVersion>0.1.4</ModVersion>
+    <ModVersion>0.1.5</ModVersion>
     <Version>2.0.8</Version>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
