@@ -29,7 +29,7 @@ namespace Pupifier
             public PupifierOptions()
             {
                 // Pupifier tab
-                SlugpupKey = config.Bind(nameof(SlugpupKey), KeyCode.Alpha0, new ConfigurableInfo("Key to toggle pup mode.", null, "", "Keybind for toggling between pup mode"));
+                SlugpupKey = config.Bind(nameof(SlugpupKey), KeyCode.Minus, new ConfigurableInfo("Key to toggle pup mode.", null, "", "Keybind for toggling between pup mode"));
                 UseSecondaryKeyToggle = config.Bind(nameof(UseSecondaryKeyToggle), true, new ConfigurableInfo("If true, the secondary key will be used to toggle pup mode.", null, "", "Use Secondary Key to Toggle Pup Mode"));
                 SlugpupSecondaryKey = config.Bind(nameof(SlugpupSecondaryKey), KeyCode.JoystickButton3, new ConfigurableInfo("Secondary Key to toggle pup mode, useful for controllers.", null, "", "Secondary Keybind for toggling between pup mode, useful for controllers"));
 

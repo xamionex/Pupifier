@@ -46,10 +46,10 @@ public partial class Pupifier
     {
         orig(self, direction);
         if (!self.playerState.isPup || self.isNPC) return;
-        self.bodyChunks[0].vel.y *= Options.WallJumpPowerFac.Value;
-        self.bodyChunks[1].vel.y *= Options.WallJumpPowerFac.Value;
-        self.bodyChunks[0].vel.x *= Options.WallJumpPowerFac.Value;
-        self.bodyChunks[1].vel.x *= Options.WallJumpPowerFac.Value;
+        self.bodyChunks[0].vel.y *= Options.WallJumpPowerFac.Value * Options.GlobalModifier.Value;
+        self.bodyChunks[1].vel.y *= Options.WallJumpPowerFac.Value * Options.GlobalModifier.Value;
+        self.bodyChunks[0].vel.x *= Options.WallJumpPowerFac.Value * Options.GlobalModifier.Value;
+        self.bodyChunks[1].vel.x *= Options.WallJumpPowerFac.Value * Options.GlobalModifier.Value;
     }
 
     private void Player_Jump(On.Player.orig_Jump orig, Player self)
@@ -99,7 +99,7 @@ public partial class Pupifier
 
         // originally 4
         additionalModifier += Options.UseSlugpupStatsToggle.Value ? Options.JumpPowerFac.Value : 0.5f;
-        self.jumpBoost *= additionalModifier;
+        self.jumpBoost *= additionalModifier * Options.GlobalModifier.Value;
     }
 
     private void Player_AppendToIsSlugpupCheck(ILContext il)
