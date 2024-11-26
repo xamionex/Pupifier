@@ -13,10 +13,12 @@ public partial class Pupifier
     private void PlayerHooks()
     {
         On.Player.Update += Player_Update;
+        On.Player.Update += Player_UpdateChecks;
 
         On.Player.setPupStatus += Player_SetPupStatus;
+
+        // Fix saint head
         On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
-        On.SlugcatHand.Update += Player_SlugcatHandUpdate;
 
         // TODO: Make an onhook instead
         //IL.SlugcatStats.SlugcatFoodMeter += Player_AppendPupCheck;
@@ -40,6 +42,26 @@ public partial class Pupifier
 
         // Add this so we get correct hand positions
         IL.SlugcatHand.Update += Player_AppendPupCheck;
+        // Fix base game slugpup animations
+        On.SlugcatHand.Update += Player_SlugcatHandUpdate;
+
+        // Allows grabbing other players
+        if (Options.GrabToggle.Value) IL.Player.Grabability += Player_AppendPupCheck;
+        else IL.Player.Grabability -= Player_AppendPupCheck;
+    }
+
+    public bool ConfigChangedUpdateChecks;
+    private void Player_UpdateChecks(On.Player.orig_Update orig, Player self, bool eu)
+    {
+        orig(self, eu);
+
+        // Allows grabbing other players
+        if (ConfigChangedUpdateChecks)
+        {
+            ConfigChangedUpdateChecks = false;
+            if (Options.GrabToggle.Value) IL.Player.Grabability += Player_AppendPupCheck;
+            else IL.Player.Grabability -= Player_AppendPupCheck;
+        }
     }
 
     private void Player_WallJump(On.Player.orig_WallJump orig, Player self, int direction)

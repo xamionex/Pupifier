@@ -25,6 +25,12 @@ namespace Pupifier
             Options = new PupifierOptions();
 
             On.RainWorld.OnModsInit += RainWorldOnOnModsInit;
+            Options.OnConfigChanged += UpdateConfigLookers;
+        }
+
+        private void UpdateConfigLookers()
+        {
+            ConfigChangedUpdateChecks = true;
         }
 
         private void Update()

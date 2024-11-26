@@ -25,6 +25,7 @@ namespace Pupifier
             public readonly Configurable<float> RunSpeedFac;
             public readonly Configurable<float> JumpPowerFac;
             public readonly Configurable<float> WallJumpPowerFac;
+            public readonly Configurable<bool> GrabToggle;
 
             public PupifierOptions()
             {
@@ -47,6 +48,9 @@ namespace Pupifier
                 JumpPowerFac = config.Bind(nameof(JumpPowerFac), 0.5f, new ConfigurableInfo("Factor affecting jump power.", null, "", "Jump Power"));
                 WallJumpPowerFac = config.Bind(nameof(WallJumpPowerFac), 1f, new ConfigurableInfo("Factor affecting wall jump power. (Additive, i.e. you set 1.2 to be 20% better at wall jumping)", null, "", "Wall Jump Power Multiplier"));
 
+                // Toggles tab
+                GrabToggle = config.Bind(nameof(GrabToggle), true, new ConfigurableInfo("If disabled, you can't be grabbed", null, "", "Allow being Grabbed"));
+
                 // Experimental tab
                 ModAutoDisabledToggle = config.Bind(nameof(ModAutoDisabledToggle), false, new ConfigurableInfo("If true, Pupifier will not disable itself when other mods are found. This requires a restart", null, "", "Allow Incompatible Mods (Requires Restart)"));
             }
@@ -57,7 +61,7 @@ namespace Pupifier
                 {
                     base.Initialize();
 
-                    Tabs = new OpTab[] { new(this, "Pupifier"), new(this, "Stats"), new(this, "Experimental") };
+                    Tabs = new OpTab[] { new(this, "Pupifier"), new(this, "Stats"), new(this, "Toggles"), new(this, "Experimental") };
 
                     /**************** Pupifier ****************/
                     curTab = 0;
@@ -98,6 +102,14 @@ namespace Pupifier
                     AddFloatSlider(RunSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.blue, Color.blue, Color.blue);
                     AddFloatSlider(JumpPowerFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.blue, Color.blue, Color.blue);
                     AddFloatSlider(WallJumpPowerFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.blue, Color.blue, Color.blue);
+
+                    /**************** Toggles ****************/
+                    curTab++;
+                    AddTitle();
+                    x = 150f;
+                    y = 540f;
+                    sepr = 30f;
+                    AddCheckbox(GrabToggle, new Vector2(x, y -= sepr), Color.yellow, Color.yellow, Color.yellow);
 
                     /**************** Experimental ****************/
                     curTab++;
