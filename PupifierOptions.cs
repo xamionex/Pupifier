@@ -25,6 +25,7 @@ namespace Pupifier
             public readonly Configurable<float> RunSpeedFac;
             public readonly Configurable<float> JumpPowerFac;
             public readonly Configurable<float> WallJumpPowerFac;
+            public readonly Configurable<float> ActionJumpPowerFac;
             public readonly Configurable<bool> DisableBeingGrabbed;
 
             public PupifierOptions()
@@ -37,16 +38,17 @@ namespace Pupifier
                 // Stats tab
                 UseSlugpupStatsToggle = config.Bind(nameof(UseSlugpupStatsToggle), true, new ConfigurableInfo("If true, stats will be changed to a slugpup's equivalent.", null, "", "Use Relative Slugpup Stats"));
                 GlobalModifier = config.Bind(nameof(GlobalModifier), 1f, new ConfigurableInfo("Multiplies all stats by this value.", null, "", "Global Modifier"));
-                BodyWeightFac = config.Bind(nameof(BodyWeightFac), 0.65f, new ConfigurableInfo("Factor affecting body weight.", null, "", "Body Weight"));
-                VisibilityBonus = config.Bind(nameof(VisibilityBonus), 0.8f, new ConfigurableInfo("Factor affecting visibility.", null, "", "Visibility"));
-                VisualStealthInSneakMode = config.Bind(nameof(VisualStealthInSneakMode), 1.2f, new ConfigurableInfo("Factor affecting visual stealth when sneaking.", null, "", "Visual Stealth In Sneak Mode"));
-                LoudnessFac = config.Bind(nameof(LoudnessFac), 0.5f, new ConfigurableInfo("Factor affecting how loud you are.", null, "", "Loudness"));
-                LungsFac = config.Bind(nameof(LungsFac), 0.8f, new ConfigurableInfo("Factor affecting lung capacity.", null, "", "Lung Capacity"));
-                PoleClimbSpeedFac = config.Bind(nameof(PoleClimbSpeedFac), 0.8f, new ConfigurableInfo("Factor affecting pole climb speed.", null, "", "Pole Climb Speed"));
-                CorridorClimbSpeedFac = config.Bind(nameof(CorridorClimbSpeedFac), 0.8f, new ConfigurableInfo("Factor affecting corridor climb speed.", null, "", "Corridor Climb Speed"));
-                RunSpeedFac = config.Bind(nameof(RunSpeedFac), 0.8f, new ConfigurableInfo("Factor affecting run speed.", null, "", "Run Speed"));
-                JumpPowerFac = config.Bind(nameof(JumpPowerFac), 0.5f, new ConfigurableInfo("Factor affecting jump power.", null, "", "Jump Power"));
+                BodyWeightFac = config.Bind(nameof(BodyWeightFac), 1f, new ConfigurableInfo("Factor affecting body weight.", null, "", "Body Weight"));
+                VisibilityBonus = config.Bind(nameof(VisibilityBonus), 1f, new ConfigurableInfo("Factor affecting visibility.", null, "", "Visibility"));
+                VisualStealthInSneakMode = config.Bind(nameof(VisualStealthInSneakMode), 1f, new ConfigurableInfo("Factor affecting visual stealth when sneaking.", null, "", "Visual Stealth In Sneak Mode"));
+                LoudnessFac = config.Bind(nameof(LoudnessFac), 1f, new ConfigurableInfo("Factor affecting how loud you are.", null, "", "Loudness"));
+                LungsFac = config.Bind(nameof(LungsFac), 1f, new ConfigurableInfo("Factor affecting lung capacity.", null, "", "Lung Capacity"));
+                PoleClimbSpeedFac = config.Bind(nameof(PoleClimbSpeedFac), 1f, new ConfigurableInfo("Factor affecting pole climb speed.", null, "", "Pole Climb Speed"));
+                CorridorClimbSpeedFac = config.Bind(nameof(CorridorClimbSpeedFac), 1f, new ConfigurableInfo("Factor affecting corridor climb speed.", null, "", "Corridor Climb Speed"));
+                RunSpeedFac = config.Bind(nameof(RunSpeedFac), 1f, new ConfigurableInfo("Factor affecting run speed.", null, "", "Run Speed"));
+                JumpPowerFac = config.Bind(nameof(JumpPowerFac), 1f, new ConfigurableInfo("Factor affecting jump power.", null, "", "Jump Power"));
                 WallJumpPowerFac = config.Bind(nameof(WallJumpPowerFac), 1f, new ConfigurableInfo("Factor affecting wall jump power. (Additive, i.e. you set 1.2 to be 20% better at wall jumping)", null, "", "Wall Jump Power Multiplier"));
+                ActionJumpPowerFac = config.Bind(nameof(ActionJumpPowerFac), 1f, new ConfigurableInfo("Factor affecting jump power in actions like rolling, rocket jumping...", null, "", "Action Jump Power"));
 
                 // Toggles tab
                 DisableBeingGrabbed = config.Bind(nameof(DisableBeingGrabbed), false, new ConfigurableInfo("If enabled, you can't be grabbed", null, "", "Disable being Grabbed"));
@@ -60,6 +62,15 @@ namespace Pupifier
                 try
                 {
                     base.Initialize();
+
+                    // Colors
+                    Color softRed = new(0.7f, 0f, 0f);
+                    Color softGreen = new(0f, 0.7f, 0f);
+                    Color softYellow = new(0.7f, 0.7f, 0f);
+                    Color softBlue = new(0f, 0f, 0.7f);
+                    Color softMagenta = new(0.7f, 0f, 0.7f);
+                    Color softCyan = new(0f, 0.7f, 0.7f);
+                    Color softGray = new(0.7f, 0.7f, 0.7f);
 
                     Tabs = new OpTab[] { new(this, "Pupifier"), new(this, "Stats"), new(this, "Toggles"), new(this, "Experimental") };
 
@@ -76,9 +87,9 @@ namespace Pupifier
                         return;
                     }
 
-                    AddKeyBinder(SlugpupKey, new Vector2(x, y -= sepr), Color.green, Color.green);
-                    AddCheckbox(UseSecondaryKeyToggle, new Vector2(x, y -= sepr), Color.yellow, Color.yellow);
-                    AddKeyBinder(SlugpupSecondaryKey, new Vector2(x, y -= sepr + 6f), Color.yellow, Color.yellow);
+                    AddKeyBinder(SlugpupKey, new Vector2(x, y -= sepr), softGreen, softGreen);
+                    AddCheckbox(UseSecondaryKeyToggle, new Vector2(x, y -= sepr), softYellow, softYellow);
+                    AddKeyBinder(SlugpupSecondaryKey, new Vector2(x, y -= sepr + 6f), softYellow, softYellow);
 
                     /**************** Stats ****************/
                     curTab++;
@@ -86,22 +97,23 @@ namespace Pupifier
                     x = 150f;
                     y = 540f;
                     sepr = 30f;
-                    AddCheckbox(UseSlugpupStatsToggle, new Vector2(x, y -= sepr), Color.green, Color.green);
-                    AddText("The following stats will multiply our current slugcat stats by the value here", new Vector2(x, y -= sepr), Color.gray);
-                    AddText("(current slugcat stat * stat option)", new Vector2(x, y -= sepr), Color.gray);
-                    x = 0f;
+                    AddCheckbox(UseSlugpupStatsToggle, new Vector2(x + 50f, y -= sepr), softGreen, softGreen);
+                    AddText("The following stats will multiply our current slugcat stats by the value here", new Vector2(x, y -= sepr), softGray);
+                    AddText("(current slugcat stat * stat option)", new Vector2(x, y -= sepr), softGray);
+                    x = 25f;
                     sepr = 30f;
-                    AddFloatSlider(GlobalModifier, new Vector2(x, y -= sepr), 0.01f, 10f, 400, Color.red, Color.red, Color.red);
-                    AddFloatSlider(BodyWeightFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.yellow, Color.yellow, Color.yellow);
-                    AddFloatSlider(VisibilityBonus, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.gray, Color.gray, Color.gray);
-                    AddFloatSlider(VisualStealthInSneakMode, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.gray, Color.gray, Color.gray);
-                    AddFloatSlider(LoudnessFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.magenta, Color.magenta, Color.magenta);
-                    AddFloatSlider(LungsFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.cyan, Color.cyan, Color.cyan);
-                    AddFloatSlider(PoleClimbSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.blue, Color.blue, Color.blue);
-                    AddFloatSlider(CorridorClimbSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.blue, Color.blue, Color.blue);
-                    AddFloatSlider(RunSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.blue, Color.blue, Color.blue);
-                    AddFloatSlider(JumpPowerFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.blue, Color.blue, Color.blue);
-                    AddFloatSlider(WallJumpPowerFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, Color.blue, Color.blue, Color.blue);
+                    AddFloatSlider(GlobalModifier, new Vector2(x, y -= sepr), 0.01f, 10f, 400, softRed, softRed, softRed);
+                    AddFloatSlider(BodyWeightFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softYellow, softYellow, softYellow);
+                    AddFloatSlider(VisibilityBonus, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softGray, softGray, softGray);
+                    AddFloatSlider(VisualStealthInSneakMode, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softGray, softGray, softGray);
+                    AddFloatSlider(LoudnessFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softMagenta, softMagenta, softMagenta);
+                    AddFloatSlider(LungsFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softCyan, softCyan, softCyan);
+                    AddFloatSlider(PoleClimbSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softBlue, softBlue, softBlue);
+                    AddFloatSlider(CorridorClimbSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softBlue, softBlue, softBlue);
+                    AddFloatSlider(RunSpeedFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softBlue, softBlue, softBlue);
+                    AddFloatSlider(JumpPowerFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softBlue, softBlue, softBlue);
+                    AddFloatSlider(WallJumpPowerFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softBlue, softBlue, softBlue);
+                    AddFloatSlider(ActionJumpPowerFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softBlue, softBlue, softBlue);
 
                     /**************** Toggles ****************/
                     curTab++;
@@ -109,7 +121,7 @@ namespace Pupifier
                     x = 150f;
                     y = 540f;
                     sepr = 30f;
-                    AddCheckbox(DisableBeingGrabbed, new Vector2(x, y -= sepr), Color.yellow, Color.yellow, Color.yellow);
+                    AddCheckbox(DisableBeingGrabbed, new Vector2(x, y -= sepr), softYellow, softYellow, softYellow);
 
                     /**************** Experimental ****************/
                     curTab++;
@@ -117,7 +129,7 @@ namespace Pupifier
                     x = 150f;
                     y = 540f;
                     sepr = 30f;
-                    AddCheckbox(ModAutoDisabledToggle, new Vector2(x, y -= sepr), Color.red, Color.red, Color.red);
+                    AddCheckbox(ModAutoDisabledToggle, new Vector2(x, y -= sepr), softRed, softRed, softRed);
 
                     Log("Added all options...");
                 }
@@ -177,7 +189,7 @@ namespace Pupifier
                     colorLine = (Color)clrline
                 };
 
-                OpLabel label = new(pos.x + width + 18f, pos.y + 6f, option.info.Tags[0] as string)
+                OpLabel label = new(pos.x + width + 15f, pos.y + 5f, option.info.Tags[0] as string)
                 {
                     description = option.info.description,
                     color = (Color)clrtext
