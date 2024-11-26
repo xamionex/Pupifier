@@ -17,20 +17,16 @@ namespace Pupifier
     {
         public static Pupifier instance;
         public static PupifierOptions Options;
+        public static PlayerData playerData;
         public bool RainMeadowEnabled;
 
         public void OnEnable()
         {
             instance = this;
             Options = new PupifierOptions();
+            playerData = new PlayerData();
 
             On.RainWorld.OnModsInit += RainWorldOnOnModsInit;
-            Options.OnConfigChanged += UpdateConfigLookers;
-        }
-
-        private void UpdateConfigLookers()
-        {
-            ConfigChangedUpdateChecks = true;
         }
 
         private void Update()

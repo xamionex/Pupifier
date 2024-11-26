@@ -5,15 +5,16 @@ using UnityEngine;
 using MonoMod.RuntimeDetour;
 using MoreSlugcats;
 using System.Collections.Generic;
+using RainMeadow;
 
 namespace Pupifier;
 
 public partial class Pupifier
 {
+
     private void PlayerHooks()
     {
         On.Player.Update += Player_Update;
-        On.Player.Update += Player_UpdateChecks;
 
         On.Player.setPupStatus += Player_SetPupStatus;
 
@@ -46,22 +47,7 @@ public partial class Pupifier
         On.SlugcatHand.Update += Player_SlugcatHandUpdate;
 
         // Allows grabbing other players
-        if (Options.GrabToggle.Value) IL.Player.Grabability += Player_AppendPupCheck;
-        else IL.Player.Grabability -= Player_AppendPupCheck;
-    }
-
-    public bool ConfigChangedUpdateChecks;
-    private void Player_UpdateChecks(On.Player.orig_Update orig, Player self, bool eu)
-    {
-        orig(self, eu);
-
-        // Allows grabbing other players
-        if (ConfigChangedUpdateChecks)
-        {
-            ConfigChangedUpdateChecks = false;
-            if (Options.GrabToggle.Value) IL.Player.Grabability += Player_AppendPupCheck;
-            else IL.Player.Grabability -= Player_AppendPupCheck;
-        }
+        IL.Player.Grabability += Player_AppendPupCheckGrabability;
     }
 
     private void Player_WallJump(On.Player.orig_WallJump orig, Player self, int direction)
@@ -122,6 +108,40 @@ public partial class Pupifier
         // originally 4
         additionalModifier += Options.UseSlugpupStatsToggle.Value ? Options.JumpPowerFac.Value : 0.5f;
         self.jumpBoost *= additionalModifier * Options.GlobalModifier.Value;
+    }
+
+    private void Player_AppendPupCheckGrabability(ILContext il)
+    {
+        //351	0328	isinst	Player
+        //352	032D	ldfld	class SlugcatStats/Name Player::SlugCatClass
+        //353	0332	ldsfld	class SlugcatStats/Name MoreSlugcats.MoreSlugcatsEnums/SlugcatStatsName::Slugpup
+        //354	0337	call	bool class ExtEnum`1<class SlugcatStats/Name>::op_Equality(class ExtEnum`1<!0>, class ExtEnum`1<!0>)
+        //355	033C	brfalse.s	363 (0352) ldsfld bool ModManager::CoopAvailable
+        try
+        {
+            var c = new ILCursor(il);
+            // Match the IL sequence for `SlugCatClass == Slugpup`
+            while (c.TryGotoNext(MoveType.AfterLabel,
+                i => i.MatchLdfld(typeof(Player).GetField("SlugCatClass")), // Load SlugCatClass
+                i => i.MatchLdsfld(typeof(MoreSlugcatsEnums.SlugcatStatsName).GetField("Slugpup")), // Load Slugpup
+                i => i.MatchCall(typeof(ExtEnum<SlugcatStats.Name>).GetMethod("op_Equality")) // Call ExtEnum op_Equality
+            ))
+            {
+                c.Emit(OpCodes.Dup); // Duplicate Player
+                c.Index += 3; // Move to delegate
+                c.EmitDelegate((Player player, bool isSlugpup) => isSlugpup || (!player.isNPC && player.playerState.isPup && Player_CheckGrabability(player)));
+            }
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Error in Player_AppendPupCheckGrabability");
+        }
+    }
+
+    public bool Player_CheckGrabability(Player player)
+    {
+        if (RainMeadowEnabled) return Player_CheckGrababilityMeadow(player);
+        return Options.DisableBeingGrabbed.Value;
     }
 
     private void Player_AppendToIsSlugpupCheck(ILContext il)
@@ -226,14 +246,23 @@ public partial class Pupifier
         }
     }
 
+    public bool SlugpupEnabled = false;
+    bool LocalPlayer = false;
+    bool RanOnce = false;
     private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
     {
+        if (RainMeadowEnabled && !RanOnce)
+        {
+            if (PlayerIsLocal(self))
+            {
+                ToggleGrabbable(self);
+                RanOnce = true;
+            };
+        };
         Player_ChangeMode(self);
         orig(self, eu);
     }
 
-    public bool SlugpupEnabled = false;
-    bool LocalPlayer = false;
     private void Player_ChangeMode(Player self)
     {
         if (self.isNPC || SlugpupEnabled == self.playerState.isPup || self == null) return;
@@ -266,6 +295,7 @@ public partial class Pupifier
         // Change body size using setPupStatus
         self.setPupStatus(SlugpupEnabled);
         // Set relative stats based on status
+        if (RainMeadowEnabled) ToggleGrabbable(self);
         if (!Options.UseSlugpupStatsToggle.Value) return;
         if (SlugpupEnabled)
         {
