@@ -55,6 +55,11 @@ namespace Pupifier
             return player.IsLocal();
         }
 
+        public static bool GameIsMeadow()
+        {
+            return OnlineManager.lobby != null;
+        }
+
         private void ToggleGrabbable(Player player)
         {
             OnlinePlayer onlinePlayer = player.abstractPhysicalObject.GetOnlineObject().owner;
