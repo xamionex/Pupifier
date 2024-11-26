@@ -46,16 +46,8 @@ namespace Pupifier
         public bool Player_CheckGrababilityMeadow(Player player)
         {
             OnlinePlayer onlinePlayer = player.abstractPhysicalObject.GetOnlineObject().owner;
-            if (playerData.Ungrabbables.Contains(onlinePlayer))
-            {
-                Log($"Player {player} | {onlinePlayer} is ungrabbable.");
-                return false;
-            }
-            else
-            {
-                Log($"Player {player} | {onlinePlayer} is grabbable.");
-                return true;
-            }
+            if (playerData.Ungrabbables.Contains(onlinePlayer)) return false;
+            return true;
         }
 
         public static bool PlayerIsLocal(Player player)
@@ -69,13 +61,19 @@ namespace Pupifier
             if (Options.GrabToggle.Value)
             {
                 if (playerData.Ungrabbables.Contains(onlinePlayer)) return;
-                OnlineManager.lobby.owner.InvokeRPC(JoinUngrabbable, OnlineManager.mePlayer);
+                foreach (var participant in OnlineManager.lobby.participants)
+                {
+                    participant.InvokeRPC(JoinUngrabbable, OnlineManager.mePlayer);
+                }
                 Log("Joined ungrabbables");
             }
             else
             {
                 if (!playerData.Ungrabbables.Contains(onlinePlayer)) return;
-                OnlineManager.lobby.owner.InvokeRPC(LeaveUngrabbable);
+                foreach (var participant in OnlineManager.lobby.participants)
+                {
+                    participant.InvokeRPC(LeaveUngrabbable);
+                }
                 Log("Left ungrabbables");
             }
         }
