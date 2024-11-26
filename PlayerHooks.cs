@@ -5,7 +5,7 @@ using UnityEngine;
 using MonoMod.RuntimeDetour;
 using MoreSlugcats;
 using System.Collections.Generic;
-using RainMeadow;
+using RWCustom;
 
 namespace Pupifier;
 
@@ -31,7 +31,7 @@ public partial class Pupifier
         new Hook(typeof(Player).GetProperty("slugcatStats").GetGetMethod(), (Func<Player, SlugcatStats> orig, Player self) => (self.isSlugpup && !self.isNPC) ? self.abstractCreature.world.game.session.characterStats : orig(self));
 
         // Change isSlugpup in specific methods
-        // In jump if isSlugpup is true, it breaks jumping off pipes, this is an individual match count IL
+        // In jump if isSlugpup is true, it breaks jumping off pipes, disables for players by adding isNPC
         IL.Player.Jump += Player_AppendToIsSlugpupCheck;
 
         // For assistance and stats
@@ -41,9 +41,9 @@ public partial class Pupifier
         // In movement if it's true we can keep walking into walls, which shouldn't happen
         IL.Player.MovementUpdate += Player_AppendToIsSlugpupCheck;
 
-        // Add this so we get correct hand positions
+        // Add so we get correct hand positions
         IL.SlugcatHand.Update += Player_AppendPupCheck;
-        // Fix base game slugpup animations
+        // Fix original slugpup animations
         On.SlugcatHand.Update += Player_SlugcatHandUpdate;
 
         // Allows grabbing other players
@@ -62,11 +62,66 @@ public partial class Pupifier
 
     private void Player_Jump(On.Player.orig_Jump orig, Player self)
     {
+        float actionJumpMultiplier = Options.UseSlugpupStatsToggle.Value ? Options.ActionJumpPowerFac.Value : 1f;
+        Player.AnimationIndex origAnimation = self.animation;
+        BodyChunk origbodyChunks0 = self.bodyChunks[0];
+        BodyChunk origbodyChunks1 = self.bodyChunks[1];
+        float origrollCounter = self.rollCounter;
+        float origrollDirection = self.rollDirection;
+        float origaerobicLevel = self.aerobicLevel;
+        bool origwhiplashJump = self.whiplashJump;
+        bool origlongBellySlide = self.longBellySlide;
+        float origslideCounter = self.slideCounter;
+        float origsuperLaunchJump = self.superLaunchJump;
+        Player.InputPackage originput0 = self.input[0];
         orig(self);
         if (!self.playerState.isPup || self.isNPC) return;
 
-        float additionalModifier = 0f;
-
+        if (origAnimation == Player.AnimationIndex.ClimbOnBeam)
+        {
+            self.bodyChunks[0].vel.y *= 0.875f * actionJumpMultiplier;
+            self.bodyChunks[1].vel.y *= 0.8571f * actionJumpMultiplier;
+            self.bodyChunks[0].vel.x *= 0.8333f * actionJumpMultiplier;
+            self.bodyChunks[1].vel.x *= 0.9f * actionJumpMultiplier;
+        }
+        else if (origAnimation == Player.AnimationIndex.Roll)
+        {
+            float massMultiplier = GetPlayerMassMultiplier(self);
+            float num3 = Mathf.InverseLerp(0f, 25f, origrollCounter);
+            self.bodyChunks[0].vel = Custom.DegToVec(origrollDirection * Mathf.Lerp(60f, 35f, num3)) * Mathf.Lerp(9.5f, 13.1f, num3) * massMultiplier * 0.65f * actionJumpMultiplier;
+            self.bodyChunks[1].vel = Custom.DegToVec(origrollDirection * Mathf.Lerp(60f, 35f, num3)) * Mathf.Lerp(9.5f, 13.1f, num3) * massMultiplier * 0.65f * actionJumpMultiplier;
+        }
+        else if (origAnimation == Player.AnimationIndex.BellySlide)
+        {
+            float massMultiplier = GetPlayerMassMultiplier(self);
+            float num4 = 9f;
+            if (self.isRivulet)
+            {
+                num4 = 18f;
+                if (self.isGourmand && ModManager.Expedition && Custom.rainWorld.ExpeditionMode && Expedition.ExpeditionGame.activeUnlocks.Contains("unl-agility"))
+                {
+                    num4 = Mathf.Lerp(14f, 9f, origaerobicLevel);
+                }
+            }
+            // confirms slugpups are works of the devil
+            num4 = Mathf.Ceil(num4 * 0.666f);
+            if (!origwhiplashJump && originput0.x != -origrollDirection)
+            {
+                float num5 = 8.5f;
+                if (self.isRivulet)
+                {
+                    num5 = 10f;
+                }
+                //if (self.isSlugpup)
+                //{
+                //    num5 = 6f;
+                //}
+                num5 = Mathf.Ceil(num5 * 0.705f);
+                self.bodyChunks[1].vel = new Vector2(origrollDirection * num4, num5) * massMultiplier * (origlongBellySlide ? 1.2f : 1f) * actionJumpMultiplier;
+                self.bodyChunks[0].vel = new Vector2(origrollDirection * num4, num5) * massMultiplier * (origlongBellySlide ? 1.2f : 1f) * actionJumpMultiplier;
+                return;
+            }
+        }
         if (self.bodyMode != Player.BodyModeIndex.CorridorClimb &&
             self.animation != Player.AnimationIndex.ClimbOnBeam &&
             self.animation != Player.AnimationIndex.BellySlide &&
@@ -75,9 +130,11 @@ public partial class Pupifier
             self.bodyChunks[1].ContactPoint.y < 0 &&
             self.input[0].downDiagonal == self.flipDirection))
         {
+            float additionalModifier;
+            int num9 = self.input[0].x;
             if (self.standing)
             {
-                if (self.slideCounter > 0 && self.slideCounter < 10)
+                if (origslideCounter > 0 && origslideCounter < 10)
                 {
                     // self.jumpBoost = 5f;
                     // if (self.isRivulet)
@@ -100,14 +157,54 @@ public partial class Pupifier
             }
             else
             {
+                // superjump
+                //float num10 = 1.5f;
+                if (origsuperLaunchJump >= 20)
+                {
+                    /*
+                    num10 = 9f;
+                    if (self.PainJumps)
+                    {
+                        num10 = 2.5f;
+                    }
+                    else if (self.isRivulet)
+                    {
+                        num10 = 12f;
+                        if (self.isGourmand && ModManager.Expedition && Custom.rainWorld.ExpeditionMode && Expedition.ExpeditionGame.activeUnlocks.Contains("unl-agility"))
+                        {
+                            num10 = Mathf.Lerp(8f, 3f, origaerobicLevel);
+                        }
+                    }
+                    */
+                    //else if (self.isSlugpup)
+                    //{
+                    //    num10 = 5.5f;
+                    //}
+                    num9 = (origbodyChunks0.pos.x > origbodyChunks1.pos.x) ? 1 : (-1);
+                    if (num9 != 0 && origbodyChunks0.pos.x > origbodyChunks1.pos.x == num9 > 0)
+                    {
+                        // should modify only superjump/rocketjump
+                        self.bodyChunks[0].vel.x *= 0.611f * actionJumpMultiplier;
+                        self.bodyChunks[1].vel.x *= 0.611f * actionJumpMultiplier;
+                    }
+                }
                 // originally 6
                 additionalModifier = 0.25f;
             }
+            // originally 4
+            additionalModifier += Options.UseSlugpupStatsToggle.Value ? (0.5f * Options.JumpPowerFac.Value) : 0.5f;
+            self.jumpBoost *= additionalModifier * Options.GlobalModifier.Value;
         }
+    }
 
-        // originally 4
-        additionalModifier += Options.UseSlugpupStatsToggle.Value ? Options.JumpPowerFac.Value : 0.5f;
-        self.jumpBoost *= additionalModifier * Options.GlobalModifier.Value;
+    private float GetPlayerMassMultiplier(Player player)
+    {
+        float massMultiplier = Mathf.Lerp(1f, 1.15f, player.Adrenaline);
+        if (player.grasps[0] != null && player.HeavyCarry(player.grasps[0].grabbed) && !(player.grasps[0].grabbed is Cicada))
+        {
+            massMultiplier += Mathf.Min(Mathf.Max(0f, player.grasps[0].grabbed.TotalMass - 0.2f) * 1.5f, 1.3f);
+        }
+        return massMultiplier;
     }
 
     private void Player_AppendPupCheckGrabability(ILContext il)
@@ -253,7 +350,7 @@ public partial class Pupifier
     {
         if (RainMeadowEnabled && !RanOnce)
         {
-            if (PlayerIsLocal(self))
+            if (PlayerIsLocal(self) && GameIsMeadow())
             {
                 ToggleGrabbable(self);
                 RanOnce = true;
@@ -291,22 +388,25 @@ public partial class Pupifier
             newStats = new(self.SlugCatClass, self.Malnourished);
             slugcatStatsDictionary.Add(self.SlugCatClass, newStats);
         }
-        Log($"Set pup status for this {(LocalPlayer ? "local " : "")}player to {SlugpupEnabled}, RainMeadow is {(RainMeadowEnabled ? "enabled" : "disabled")}");
+        Log($"Set pup status for {(LocalPlayer ? "local " : "non-local")} player to {SlugpupEnabled}, RainMeadow is {(RainMeadowEnabled ? "enabled" : "disabled")}");
         // Change body size using setPupStatus
         self.setPupStatus(SlugpupEnabled);
-        // Set relative stats based on status
-        if (RainMeadowEnabled) ToggleGrabbable(self);
+        if (RainMeadowEnabled)
+        {
+            if (GameIsMeadow()) ToggleGrabbable(self);
+        };
+        // Set relative stats on status
         if (!Options.UseSlugpupStatsToggle.Value) return;
         if (SlugpupEnabled)
         {
-            self.slugcatStats.bodyWeightFac = newStats.bodyWeightFac * Options.BodyWeightFac.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.generalVisibilityBonus = newStats.generalVisibilityBonus * Options.VisibilityBonus.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.visualStealthInSneakMode = newStats.visualStealthInSneakMode * Options.VisualStealthInSneakMode.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.loudnessFac = newStats.loudnessFac * Options.LoudnessFac.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.lungsFac = newStats.lungsFac * Options.LungsFac.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.poleClimbSpeedFac = newStats.poleClimbSpeedFac * Options.PoleClimbSpeedFac.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.corridorClimbSpeedFac = newStats.corridorClimbSpeedFac * Options.CorridorClimbSpeedFac.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.runspeedFac = newStats.runspeedFac * Options.RunSpeedFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.bodyWeightFac = newStats.bodyWeightFac * 0.65f * Options.BodyWeightFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.generalVisibilityBonus = newStats.generalVisibilityBonus * 0.8f * Options.VisibilityBonus.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.visualStealthInSneakMode = newStats.visualStealthInSneakMode * 1.2f * Options.VisualStealthInSneakMode.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.loudnessFac = newStats.loudnessFac * 0.5f * Options.LoudnessFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.lungsFac = newStats.lungsFac * 0.8f * Options.LungsFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.poleClimbSpeedFac = newStats.poleClimbSpeedFac * 0.8f * Options.PoleClimbSpeedFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.corridorClimbSpeedFac = newStats.corridorClimbSpeedFac * 0.8f * Options.CorridorClimbSpeedFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.runspeedFac = newStats.runspeedFac * 0.8f * Options.RunSpeedFac.Value * Options.GlobalModifier.Value;
         }
         else
         {
@@ -323,11 +423,11 @@ public partial class Pupifier
 
     private void Player_SlugcatHandUpdate(On.SlugcatHand.orig_Update orig, SlugcatHand self)
     {
-        // Call the original method to keep the base behavior
+        // Call the original method to keep the original behavior
         orig(self);
 
         // Scale the hands (arms) position relative to its connection
-        // In base game pups have long arms, which looks goofy
+        // In original pups have long arms, which looks goofy
         // (extensively tested, 3 different setups)
         if (self.owner.owner is not Player player || (!player.isNPC && !player.playerState.isPup)) return;
 
@@ -336,7 +436,7 @@ public partial class Pupifier
 
         if (player.animation == Player.AnimationIndex.HangUnderVerticalBeam)
         {
-            // this fixes arms when hanging from vertical pipes
+            // Fixes arms when hanging from vertical pipes
             Vector2 offset = self.absoluteHuntPos - self.owner.owner.bodyChunks[0].pos;
             self.absoluteHuntPos = self.owner.owner.bodyChunks[0].pos + offset * 0.5f;
         }
@@ -346,7 +446,7 @@ public partial class Pupifier
             player.animation == Player.AnimationIndex.BeamTip
         )
         {
-            // this works for standing on pipes (balancing) (that includes: standing on horizontal pipes, beam tips)
+            // Works for standing on pipes (balancing) (that includes: standing on horizontal pipes, beam tips)
             // also required for the above fix (hanging)
             // probably doesn't fix crawling arms being too long, but im gonna keep it since it doesnt break anything
             self.relativeHuntPos *= 0.5f;
