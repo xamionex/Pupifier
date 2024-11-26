@@ -141,7 +141,7 @@ public partial class Pupifier
     public bool Player_CheckGrabability(Player player)
     {
         if (RainMeadowEnabled) return Player_CheckGrababilityMeadow(player);
-        return Options.DisableBeingGrabbed.Value;
+        return !Options.DisableBeingGrabbed.Value;
     }
 
     private void Player_AppendToIsSlugpupCheck(ILContext il)
