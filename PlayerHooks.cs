@@ -141,7 +141,7 @@ public partial class Pupifier
     public bool Player_CheckGrabability(Player player)
     {
         if (RainMeadowEnabled) return Player_CheckGrababilityMeadow(player);
-        return Options.GrabToggle.Value;
+        return Options.DisableBeingGrabbed.Value;
     }
 
     private void Player_AppendToIsSlugpupCheck(ILContext il)
@@ -246,14 +246,23 @@ public partial class Pupifier
         }
     }
 
+    public bool SlugpupEnabled = false;
+    bool LocalPlayer = false;
+    bool RanOnce = false;
     private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
     {
+        if (RainMeadowEnabled && !RanOnce)
+        {
+            if (PlayerIsLocal(self))
+            {
+                ToggleGrabbable(self);
+                RanOnce = true;
+            };
+        };
         Player_ChangeMode(self);
         orig(self, eu);
     }
 
-    public bool SlugpupEnabled = false;
-    bool LocalPlayer = false;
     private void Player_ChangeMode(Player self)
     {
         if (self.isNPC || SlugpupEnabled == self.playerState.isPup || self == null) return;

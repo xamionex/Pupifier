@@ -25,7 +25,7 @@ namespace Pupifier
             public readonly Configurable<float> RunSpeedFac;
             public readonly Configurable<float> JumpPowerFac;
             public readonly Configurable<float> WallJumpPowerFac;
-            public readonly Configurable<bool> GrabToggle;
+            public readonly Configurable<bool> DisableBeingGrabbed;
 
             public PupifierOptions()
             {
@@ -49,7 +49,7 @@ namespace Pupifier
                 WallJumpPowerFac = config.Bind(nameof(WallJumpPowerFac), 1f, new ConfigurableInfo("Factor affecting wall jump power. (Additive, i.e. you set 1.2 to be 20% better at wall jumping)", null, "", "Wall Jump Power Multiplier"));
 
                 // Toggles tab
-                GrabToggle = config.Bind(nameof(GrabToggle), true, new ConfigurableInfo("If enabled, you can't be grabbed", null, "", "Disable being Grabbed"));
+                DisableBeingGrabbed = config.Bind(nameof(DisableBeingGrabbed), true, new ConfigurableInfo("If enabled, you can't be grabbed", null, "", "Disable being Grabbed"));
 
                 // Experimental tab
                 ModAutoDisabledToggle = config.Bind(nameof(ModAutoDisabledToggle), false, new ConfigurableInfo("If true, Pupifier will not disable itself when other mods are found. This requires a restart", null, "", "Allow Incompatible Mods (Requires Restart)"));
@@ -109,7 +109,7 @@ namespace Pupifier
                     x = 150f;
                     y = 540f;
                     sepr = 30f;
-                    AddCheckbox(GrabToggle, new Vector2(x, y -= sepr), Color.yellow, Color.yellow, Color.yellow);
+                    AddCheckbox(DisableBeingGrabbed, new Vector2(x, y -= sepr), Color.yellow, Color.yellow, Color.yellow);
 
                     /**************** Experimental ****************/
                     curTab++;

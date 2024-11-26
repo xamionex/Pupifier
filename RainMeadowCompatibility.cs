@@ -58,7 +58,7 @@ namespace Pupifier
         private void ToggleGrabbable(Player player)
         {
             OnlinePlayer onlinePlayer = player.abstractPhysicalObject.GetOnlineObject().owner;
-            if (Options.GrabToggle.Value)
+            if (Options.DisableBeingGrabbed.Value)
             {
                 if (playerData.Ungrabbables.Contains(onlinePlayer)) return;
                 foreach (var participant in OnlineManager.lobby.participants)
