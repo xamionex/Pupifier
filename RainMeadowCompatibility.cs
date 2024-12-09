@@ -9,34 +9,34 @@ using RainMeadow;
 
 namespace Pupifier
 {
-    public class PlayerData : OnlineResource.ResourceData
+    public class PlayerData : OnlineEntity.EntityData
     {
-        public List<OnlinePlayer> Ungrabbables = new();
+        public bool Grabbable;
 
         public PlayerData() { }
 
-        public override ResourceDataState MakeState(OnlineResource resource)
+        public override EntityDataState MakeState(OnlineEntity entity, OnlineResource inResource)
         {
             return new PlayerState(this);
         }
 
-        private class PlayerState : ResourceDataState
+        private class PlayerState : OnlineEntity.EntityData.EntityDataState
         {
-            [OnlineField(nullable = true)]
-            RainMeadow.Generics.DynamicUnorderedUshorts Ungrabbables;
+            [OnlineField]
+            public bool Grabbable;
 
             public PlayerState() { }
-            public PlayerState(PlayerData PlayerData)
+            public PlayerState(PlayerData playerData)
             {
-                Ungrabbables = new(PlayerData.Ungrabbables.Select(p => p.inLobbyId).ToList());
+                Grabbable = playerData.Grabbable;
             }
 
             public override Type GetDataType() => typeof(PlayerData);
 
-            public override void ReadTo(OnlineResource.ResourceData data, OnlineResource resource)
+            public override void ReadTo(OnlineEntity.EntityData data, OnlineEntity resource)
             {
-                PlayerData PlayerData = (PlayerData)data;
-                PlayerData.Ungrabbables = Ungrabbables.list.Select(i => OnlineManager.lobby.PlayerFromId(i)).Where(p => p != null).ToList();
+                var playerData = (PlayerData)data;
+                playerData.Grabbable = Grabbable;
             }
         }
     }
@@ -45,9 +45,12 @@ namespace Pupifier
     {
         public bool Player_CheckGrababilityMeadow(Player player)
         {
-            OnlinePlayer onlinePlayer = player.abstractPhysicalObject.GetOnlineObject().owner;
-            if (playerData.Ungrabbables.Contains(onlinePlayer)) return false;
-            return true;
+            var playerOnlineObject = player.abstractPhysicalObject.GetOnlineObject();
+            if (playerOnlineObject.TryGetData<PlayerData>(out var data))
+            {
+                if (data.Grabbable) return true;
+            }
+            return false;
         }
 
         public static bool PlayerIsLocal(Player player)
@@ -62,44 +65,23 @@ namespace Pupifier
 
         private void ToggleGrabbable(Player player)
         {
-            OnlinePlayer onlinePlayer = player.abstractPhysicalObject.GetOnlineObject().owner;
-            if (Options.DisableBeingGrabbed.Value)
+            var playerOnlineObject = player.abstractPhysicalObject.GetOnlineObject();
+            if (playerOnlineObject.TryGetData<PlayerData>(out var data))
             {
-                if (playerData.Ungrabbables.Contains(onlinePlayer)) return;
-                foreach (var participant in OnlineManager.lobby.participants)
-                {
-                    participant.InvokeRPC(JoinUngrabbable, OnlineManager.mePlayer);
-                }
-                Log("Joined ungrabbables");
-            }
-            else
-            {
-                if (!playerData.Ungrabbables.Contains(onlinePlayer)) return;
-                foreach (var participant in OnlineManager.lobby.participants)
-                {
-                    participant.InvokeRPC(LeaveUngrabbable);
-                }
-                Log("Left ungrabbables");
+                data.Grabbable = !Options.DisableBeingGrabbed.Value;
             }
         }
 
-        [RainMeadow.RPCMethod]
-        public static void JoinUngrabbable(RPCEvent rpcEvent, OnlinePlayer newUngrabbable)
+        public void InitPlayerData(Player player)
         {
-            if (!playerData.Ungrabbables.Contains(newUngrabbable))
+            var playerOnlineObject = player.abstractPhysicalObject.GetOnlineObject();
+            playerOnlineObject.TryGetData<PlayerData>(out var data);
+            if (data == null)
             {
-                Log($"Got RPC and added new ungrabbable player: {newUngrabbable}");
-                playerData.Ungrabbables.Add(newUngrabbable);
-                OnlineManager.lobby.NewVersion();
+                var pData = new PlayerData();
+                pData.Grabbable = !Options.DisableBeingGrabbed.Value;
+                playerOnlineObject.AddData(pData);
             }
-        }
-
-        [RainMeadow.RPCMethod]
-        public static void LeaveUngrabbable(RPCEvent rpcEvent)
-        {
-            Log($"Got RPC event and removed ungrabbable player: {rpcEvent.from}");
-            playerData.Ungrabbables.Remove(rpcEvent.from);
-            OnlineManager.lobby.NewVersion();
         }
     }
 }

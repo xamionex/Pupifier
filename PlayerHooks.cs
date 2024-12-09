@@ -350,12 +350,16 @@ public partial class Pupifier
     {
         if (RainMeadowEnabled && !RanOnce)
         {
-            if (PlayerIsLocal(self) && GameIsMeadow())
+            if (GameIsMeadow())
             {
-                ToggleGrabbable(self);
-                RanOnce = true;
-            };
-        };
+                InitPlayerData(self);
+                if (PlayerIsLocal(self))
+                {
+                    ToggleGrabbable(self);
+                    RanOnce = true;
+                }
+            }
+        }
         Player_ChangeMode(self);
         orig(self, eu);
     }
