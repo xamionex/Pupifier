@@ -48,7 +48,7 @@ namespace Pupifier
             var playerOnlineObject = player.abstractPhysicalObject.GetOnlineObject();
             if (playerOnlineObject.TryGetData<PlayerData>(out var data))
             {
-                return data.Grabbable;
+                if (data.Grabbable) return true;
             }
             return false;
         }
@@ -75,9 +75,12 @@ namespace Pupifier
         public void InitPlayerData(Player player)
         {
             var playerOnlineObject = player.abstractPhysicalObject.GetOnlineObject();
-            if (!playerOnlineObject.TryGetData<PlayerData>(out var data))
+            playerOnlineObject.TryGetData<PlayerData>(out var data);
+            if (data == null)
             {
-                playerOnlineObject.AddData(new PlayerData());
+                var pData = new PlayerData();
+                pData.Grabbable = !Options.DisableBeingGrabbed.Value;
+                playerOnlineObject.AddData(pData);
             }
         }
     }
