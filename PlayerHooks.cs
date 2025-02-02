@@ -40,6 +40,9 @@ public partial class Pupifier
 
         // In movement if it's true we can keep walking into walls, which shouldn't happen
         IL.Player.MovementUpdate += Player_AppendToIsSlugpupCheck;
+        
+        // False in SlugcatGrab if we have using both arms enabled
+        IL.Player.SlugcatGrab += Player_SlugcatGrabAppendToIsSlugpupCheck;
 
         // Add so we get correct hand positions
         IL.SlugcatHand.Update += Player_AppendPupCheck;
@@ -252,14 +255,42 @@ public partial class Pupifier
 
             // Match the IL sequence for `call instance bool Player::get_isSlugpup()`
             while (c.TryGotoNext(MoveType.AfterLabel,
-                i => i.MatchLdarg(0), // Match ldarg.0 instruction
-                i => i.MatchCall(typeof(Player).GetMethod("get_isSlugpup")) // Match call to get_isSlugpup()
-            )) // Match the branch instruction after get_isSlugpup
+                       i => i.MatchLdarg(0), // Match ldarg.0 instruction
+                       i => i.MatchCall(typeof(Player).GetMethod("get_isSlugpup")) // Match call to get_isSlugpup()
+                   )) // Match the branch instruction after get_isSlugpup
             {
                 c.Index += 2;
                 // Insert the condition directly after get_isSlugpup
                 c.Emit(OpCodes.Ldarg_0);
                 c.EmitDelegate((Player player) => player.isNPC);
+                c.Emit(OpCodes.And);
+            }
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Error in Player_AppendToIsSlugpupCheck");
+        }
+    }
+
+    private void Player_SlugcatGrabAppendToIsSlugpupCheck(ILContext il)
+    {
+        // 136	017F	ldarg.0
+        // 137	0180	call	instance bool Player::get_isSlugpup()
+        // 138	0185	brfalse.s	164 (01BF) ldc.i4.1 
+        try
+        {
+            var c = new ILCursor(il);
+
+            // Match the IL sequence for `call instance bool Player::get_isSlugpup()`
+            while (c.TryGotoNext(MoveType.AfterLabel,
+                       i => i.MatchLdarg(0), // Match ldarg.0 instruction
+                       i => i.MatchCall(typeof(Player).GetMethod("get_isSlugpup")) // Match call to get_isSlugpup()
+                   )) // Match the branch instruction after get_isSlugpup
+            {
+                c.Index += 2;
+                // Insert the condition directly after get_isSlugpup
+                c.Emit(OpCodes.Ldarg_0);
+                c.EmitDelegate((Player player) => !Options.UseBothHands.Value);
                 c.Emit(OpCodes.And);
             }
         }

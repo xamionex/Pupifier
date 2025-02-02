@@ -27,6 +27,7 @@ namespace Pupifier
             public readonly Configurable<float> WallJumpPowerFac;
             public readonly Configurable<float> ActionJumpPowerFac;
             public readonly Configurable<bool> DisableBeingGrabbed;
+            public readonly Configurable<bool> UseBothHands;
 
             public PupifierOptions()
             {
@@ -52,6 +53,7 @@ namespace Pupifier
 
                 // Toggles tab
                 DisableBeingGrabbed = config.Bind(nameof(DisableBeingGrabbed), false, new ConfigurableInfo("If enabled, you can't be grabbed", null, "", "Disable being Grabbed"));
+                UseBothHands = config.Bind(nameof(UseBothHands), false, new ConfigurableInfo("If enabled, you can use both hands as a pup", null, "", "Enable using both hands"));
 
                 // Experimental tab
                 ModAutoDisabledToggle = config.Bind(nameof(ModAutoDisabledToggle), false, new ConfigurableInfo("If true, Pupifier will not disable itself when other mods are found. This requires a restart", null, "", "Allow Incompatible Mods (Requires Restart)"));
@@ -122,6 +124,7 @@ namespace Pupifier
                     y = 540f;
                     sepr = 30f;
                     AddCheckbox(DisableBeingGrabbed, new Vector2(x, y -= sepr), softYellow, softYellow, softYellow);
+                    AddCheckbox(UseBothHands, new Vector2(x, y -= sepr), softYellow, softYellow, softYellow);
 
                     /**************** Experimental ****************/
                     curTab++;
