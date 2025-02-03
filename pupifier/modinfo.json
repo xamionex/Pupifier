@@ -1,10 +1,35 @@
 {
     "id": "amione.Pupifier",
     "name": "Pupifier",
-    "version": "2.0.0",
+    "version": "2.0.1",
     "target_game_version": "v1.9.15",
     "authors": "amione - Creator, youbitchoc - For helping in development, henpemaz - For Rain Meadow, Maxi Mol - For Mouse Drag code, LDani, simichan1227 - For testing the s**t out of my mod (It was kinda encouraging)",
-    "description": "Pupifier is a mod that allows you to become a slugpup in Rain World! This mod enhances your gameplay experience by enabling you to transform into a slugpup, offering a unique perspective and new challenges. Additionally, this mod was made for Rain Meadow but works normally as well!",
+    "description": "
+Lets you become a slugpup in Rain World with a push of a button (dynamic in-game transform), with meadow support. This mod was made specifically for meadow but works for non-meadow as well
+
+Known issues
+
+- Meadow issues are not related to my mod (grabbing players and breaking if you go thru a pipe, piggybacking desync)
+- Report any issues please!
+
+Features
+
+- Transform into a slugpup (Works in Rain Meadow)
+- Change your stats based on slugpup relativity
+- Works with modded slugcats as wellCredits
+      
+Credits
+      
+- amione - Creator
+- youbitchoc - For helping in development
+- henpemaz - For Rain Meadow
+- Maxi Mol - For Mouse Drag code
+- LDani, simichan1227 - For testing the s**t out of my mod (It was kinda encouraging)
+      
+Report Issues on github please! https://github.com/xamionex/Pupifier/issues/new
+Steam doesn't give me notifications for comments on my own mods for some reason,
+so I might not see your comment because I need to literally go to the mod page to see it, and I'm not doing that every day.
+    ",
     "requirements": ["moreslugcats"],
     "requirements_names": [],
     "checksum_override_version": true

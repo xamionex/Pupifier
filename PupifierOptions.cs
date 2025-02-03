@@ -28,6 +28,7 @@ namespace Pupifier
             public readonly Configurable<float> ActionJumpPowerFac;
             public readonly Configurable<bool> DisableBeingGrabbed;
             public readonly Configurable<bool> UseBothHands;
+            public readonly Configurable<bool> SpearmasterTwoHanded;
 
             public PupifierOptions()
             {
@@ -54,6 +55,7 @@ namespace Pupifier
                 // Toggles tab
                 DisableBeingGrabbed = config.Bind(nameof(DisableBeingGrabbed), false, new ConfigurableInfo("If enabled, you can't be grabbed", null, "", "Disable being Grabbed"));
                 UseBothHands = config.Bind(nameof(UseBothHands), false, new ConfigurableInfo("If enabled, you can use both hands as a pup", null, "", "Enable using both hands"));
+                SpearmasterTwoHanded = config.Bind(nameof(SpearmasterTwoHanded), true, new ConfigurableInfo("If enabled, you can use both hands for spears as spearmaster", null, "", "Spearmaster can hold 2 spears"));
 
                 // Experimental tab
                 ModAutoDisabledToggle = config.Bind(nameof(ModAutoDisabledToggle), false, new ConfigurableInfo("If true, Pupifier will not disable itself when other mods are found. This requires a restart", null, "", "Allow Incompatible Mods (Requires Restart)"));
@@ -125,6 +127,7 @@ namespace Pupifier
                     sepr = 30f;
                     AddCheckbox(DisableBeingGrabbed, new Vector2(x, y -= sepr), softYellow, softYellow, softYellow);
                     AddCheckbox(UseBothHands, new Vector2(x, y -= sepr), softYellow, softYellow, softYellow);
+                    AddCheckbox(SpearmasterTwoHanded, new Vector2(x, y -= sepr), softYellow, softYellow, softYellow);
 
                     /**************** Experimental ****************/
                     curTab++;

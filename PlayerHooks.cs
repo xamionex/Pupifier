@@ -41,7 +41,7 @@ public partial class Pupifier
         // In movement if it's true we can keep walking into walls, which shouldn't happen
         IL.Player.MovementUpdate += Player_AppendToIsSlugpupCheck;
         
-        // False in SlugcatGrab if we have using both arms enabled
+        // False in SlugcatGrab if we have using both arms enabled or if were spearmaster and we want to pick up a spear
         IL.Player.SlugcatGrab += Player_SlugcatGrabAppendToIsSlugpupCheck;
 
         // Add so we get correct hand positions
@@ -290,7 +290,8 @@ public partial class Pupifier
                 c.Index += 2;
                 // Insert the condition directly after get_isSlugpup
                 c.Emit(OpCodes.Ldarg_0);
-                c.EmitDelegate((Player player) => !Options.UseBothHands.Value);
+                c.Emit(OpCodes.Ldarg_1);
+                c.EmitDelegate(GetHandsCanGrabAnyway);
                 c.Emit(OpCodes.And);
             }
         }
@@ -298,6 +299,19 @@ public partial class Pupifier
         {
             LogError(ex, "Error in Player_AppendToIsSlugpupCheck");
         }
+    }
+
+    // Inverted ifs because we need to not pass the slugpup if check, not go inside it
+    private bool GetHandsCanGrabAnyway(Player player, PhysicalObject obj)
+    {
+        if (Options.SpearmasterTwoHanded.Value && player.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Spear &&
+            obj is Spear && IsHoldingSpear(player)) return false;
+        return !Options.UseBothHands.Value;
+    }
+
+    private bool IsHoldingSpear(Player player)
+    {
+        return player.grasps[0]?.grabbed is Spear || player.grasps[1]?.grabbed is Spear;
     }
 
     private void Player_AppendPupCheck(ILContext il)

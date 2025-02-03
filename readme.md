@@ -1,16 +1,17 @@
 # Pupifier
 
-Pupifier is a mod that allows you to become a slugpup in Rain Meadow! This mod enhances your gameplay experience by enabling you to transform into a slugpup, offering a unique perspective and new challenges.
+Lets you become a slugpup in Rain World with a push of a button (dynamic in-game transform), with meadow support. This mod was made specifically for meadow but works for non-meadow as well
 
 ## Known issues
 
-- Meadow issues are not related to my mod (grabbing players and breaking if you go thru a pipe...)
+- Meadow issues are not related to my mod (grabbing players and breaking if you go thru a pipe, piggybacking desync)
 - Report any issues please!
 
 ## Features
 
-- Transform into a slugpup in Rain Meadow.
+- Transform into a slugpup (Works in Rain Meadow)
 - Change your stats based on slugpup relativity
+- Works with modded slugcats as well
 
 ## Installation
 
@@ -22,9 +23,7 @@ Pupifier is a mod that allows you to become a slugpup in Rain Meadow! This mod e
 ## Requirements
 
 - Game version: v1.9.15
-- Required Mods:
-  - henpemaz_rainmeadow
-  - moreslugcats
+- Required Mods: moreslugcats
 
 ## Credits
 
@@ -40,6 +39,5 @@ This mod is provided as-is, without any express or implied warranties. Use at yo
 
 ## Support
 
-If you encounter any issues or have questions, feel free to reach out to the community or contribute to the development of the mod.
-
+If you encounter any issues or have questions, feel free to reach out or contribute to the development of the mod.
 Enjoy your time as a slugpup in Rain Meadow!
