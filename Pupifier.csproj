@@ -3,33 +3,32 @@
     <TargetFramework>net48</TargetFramework>
     <AssemblyName>amione.Pupifier</AssemblyName>
     <Product>Pupifier</Product>
-    <ProductDescription>
-Lets you become a slugpup in Rain World with a push of a button (dynamic in-game transform), with meadow support. This mod was made specifically for meadow but works for non-meadow as well
+    <ProductDescription>Lets you become a slugpup in Rain World with a push of a button (dynamic in-game transform), with meadow support. This mod was made specifically for meadow but works for non-meadow as well
 
 Known issues
 
-- Meadow issues are not related to my mod (grabbing players and breaking if you go thru a pipe, piggybacking desync)
-- Report any issues please!
+- Meadow issues (not related to my mod): 
+grabbing players and breaking if you go thru a pipe, piggybacking desync
 
 Features
 
-- Transform into a slugpup (Works in Rain Meadow)
+- Transform into a slugpup dynamically, also works in Meadow
 - Change your stats based on slugpup relativity
-- Works with modded slugcats as wellCredits
-      
+- Works with modded slugcats as well
+
 Credits
-      
+
 - amione - Creator
 - youbitchoc - For helping in development
 - henpemaz - For Rain Meadow
 - Maxi Mol - For Mouse Drag code
 - LDani, simichan1227 - For testing the s**t out of my mod (It was kinda encouraging)
-      
+
 Report Issues on github please! https://github.com/xamionex/Pupifier/issues/new
 Steam doesn't give me notifications for comments on my own mods for some reason,
 so I might not see your comment because I need to literally go to the mod page to see it, and I'm not doing that every day.
     </ProductDescription>
-    <ModVersion>2.0.1</ModVersion>
+    <ModVersion>2.0.2</ModVersion>
     <Version>2.0.8</Version>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
