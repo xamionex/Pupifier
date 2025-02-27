@@ -9,7 +9,8 @@ Known issues
 
 - Meadow issues (not related to my mod): 
 grabbing players and breaking if you go thru a pipe, piggybacking desync
-
+- Meadow Gamemode: Not working; henpemaz has coded it so that pups are not allowed in the meadow gamemode
+      
 Features
 
 - Transform into a slugpup dynamically, also works in Meadow
@@ -28,7 +29,7 @@ Report Issues on github please! https://github.com/xamionex/Pupifier/issues/new
 Steam doesn't give me notifications for comments on my own mods for some reason,
 so I might not see your comment because I need to literally go to the mod page to see it, and I'm not doing that every day.
     </ProductDescription>
-    <ModVersion>2.0.2</ModVersion>
+    <ModVersion>2.0.3</ModVersion>
     <Version>2.0.8</Version>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
@@ -54,7 +55,6 @@ so I might not see your comment because I need to literally go to the mod page t
 
   <ItemGroup>
     <None Remove=".gitattributes" />
-    <None Remove=".gitignore" />
   </ItemGroup>
 
   <ItemGroup>
@@ -70,6 +70,10 @@ so I might not see your comment because I need to literally go to the mod page t
       <Generator>SettingsSingleFileGenerator</Generator>
       <LastGenOutput>Settings.Designer.cs</LastGenOutput>
     </None>
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="Pupifier.sln" />
   </ItemGroup>
 
   <Target Name="PreBuild" BeforeTargets="PreBuildEvent">

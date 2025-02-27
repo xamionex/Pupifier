@@ -8,13 +8,14 @@ namespace Pupifier
     {
         public partial class PupifierOptions : OptionInterface
         {
-            public int curTab;
+            public int CurTab;
             public readonly Configurable<KeyCode> SlugpupKey;
             public readonly Configurable<bool> UseSecondaryKeyToggle;
             public readonly Configurable<KeyCode> SlugpupSecondaryKey;
             public readonly Configurable<bool> UseSlugpupStatsToggle;
             public readonly Configurable<bool> ModAutoDisabledToggle;
             public readonly Configurable<float> GlobalModifier;
+            public readonly Configurable<float> SizeModifier;
             public readonly Configurable<float> BodyWeightFac;
             public readonly Configurable<float> VisibilityBonus;
             public readonly Configurable<float> VisualStealthInSneakMode;
@@ -29,6 +30,9 @@ namespace Pupifier
             public readonly Configurable<bool> DisableBeingGrabbed;
             public readonly Configurable<bool> UseBothHands;
             public readonly Configurable<bool> SpearmasterTwoHanded;
+            public readonly Configurable<bool> ManualPupChange;
+            public readonly Configurable<bool> LoggingPupEnabled;
+            public readonly Configurable<bool> LoggingStatusEnabled;
 
             public PupifierOptions()
             {
@@ -40,7 +44,7 @@ namespace Pupifier
                 // Stats tab
                 UseSlugpupStatsToggle = config.Bind(nameof(UseSlugpupStatsToggle), true, new ConfigurableInfo("If true, stats will be changed to a slugpup's equivalent.", null, "", "Use Relative Slugpup Stats"));
                 GlobalModifier = config.Bind(nameof(GlobalModifier), 1f, new ConfigurableInfo("Multiplies all stats by this value.", null, "", "Global Modifier"));
-                BodyWeightFac = config.Bind(nameof(BodyWeightFac), 1f, new ConfigurableInfo("Factor affecting body weight.", null, "", "Body Weight"));
+                BodyWeightFac = config.Bind(nameof(BodyWeightFac), 1f, new ConfigurableInfo("Factor affecting body weight. This influences body size a small amount", null, "", "Body Weight"));
                 VisibilityBonus = config.Bind(nameof(VisibilityBonus), 1f, new ConfigurableInfo("Factor affecting visibility.", null, "", "Visibility"));
                 VisualStealthInSneakMode = config.Bind(nameof(VisualStealthInSneakMode), 1f, new ConfigurableInfo("Factor affecting visual stealth when sneaking.", null, "", "Visual Stealth In Sneak Mode"));
                 LoudnessFac = config.Bind(nameof(LoudnessFac), 1f, new ConfigurableInfo("Factor affecting how loud you are.", null, "", "Loudness"));
@@ -53,12 +57,16 @@ namespace Pupifier
                 ActionJumpPowerFac = config.Bind(nameof(ActionJumpPowerFac), 1f, new ConfigurableInfo("Factor affecting jump power in actions like rolling, rocket jumping...", null, "", "Action Jump Power"));
 
                 // Toggles tab
+                LoggingPupEnabled = config.Bind(nameof(LoggingPupEnabled), true, new ConfigurableInfo("If enabled, console will log pup changes", null, "", "Enable logging for pup change"));
+                LoggingStatusEnabled = config.Bind(nameof(LoggingStatusEnabled), false, new ConfigurableInfo("If enabled, console will log stats upon changes", null, "", "Enable logging for stats when changing"));
                 DisableBeingGrabbed = config.Bind(nameof(DisableBeingGrabbed), false, new ConfigurableInfo("If enabled, you can't be grabbed", null, "", "Disable being Grabbed"));
                 UseBothHands = config.Bind(nameof(UseBothHands), false, new ConfigurableInfo("If enabled, you can use both hands as a pup", null, "", "Enable using both hands"));
                 SpearmasterTwoHanded = config.Bind(nameof(SpearmasterTwoHanded), true, new ConfigurableInfo("If enabled, you can use both hands for spears as spearmaster", null, "", "Spearmaster can hold 2 spears"));
 
                 // Experimental tab
                 ModAutoDisabledToggle = config.Bind(nameof(ModAutoDisabledToggle), false, new ConfigurableInfo("If true, Pupifier will not disable itself when other mods are found. This requires a restart", null, "", "Allow Incompatible Mods (Requires Restart)"));
+                ManualPupChange = config.Bind(nameof(ManualPupChange), false, new ConfigurableInfo("If enabled, the base game method for changing pup status won't be used and instead mine will, probably doesn't work well", null, "", "Manual Pup Change, required for body size"));
+                SizeModifier = config.Bind(nameof(SizeModifier), 1f, new ConfigurableInfo("Factor affecting body size. (Only with manual pup toggle, probably doesn't work)", null, "", "Body Size"));
             }
 
             public override void Initialize()
@@ -79,7 +87,7 @@ namespace Pupifier
                     Tabs = new OpTab[] { new(this, "Pupifier"), new(this, "Stats"), new(this, "Toggles"), new(this, "Experimental") };
 
                     /**************** Pupifier ****************/
-                    curTab = 0;
+                    CurTab = 0;
                     AddTitle();
                     float x = 80f;
                     float y = 540f;
@@ -87,8 +95,11 @@ namespace Pupifier
 
                     if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("elumenix.pupify"))
                     {
-                        AddText("elumenix.pupify is installed, we do not support this mod.", new Vector2(x, y -= sepr));
-                        return;
+                        AddText("elumenix.pupify is installed, we do not support this mod. (Experimental Tab)", new Vector2(150f, y -= sepr));
+                    }
+                    if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("henpemaz.rainmeadow"))
+                    {
+                        AddText("henpemaz.rainmeadow is installed, note that they disabled pups in the meadow gamemode.", new Vector2(150f, y -= sepr));
                     }
 
                     AddKeyBinder(SlugpupKey, new Vector2(x, y -= sepr), softGreen, softGreen);
@@ -96,7 +107,7 @@ namespace Pupifier
                     AddKeyBinder(SlugpupSecondaryKey, new Vector2(x, y -= sepr + 6f), softYellow, softYellow);
 
                     /**************** Stats ****************/
-                    curTab++;
+                    CurTab++;
                     AddTitle();
                     x = 150f;
                     y = 540f;
@@ -120,22 +131,28 @@ namespace Pupifier
                     AddFloatSlider(ActionJumpPowerFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softBlue, softBlue, softBlue);
 
                     /**************** Toggles ****************/
-                    curTab++;
+                    CurTab++;
                     AddTitle();
                     x = 150f;
                     y = 540f;
                     sepr = 30f;
+                    AddCheckbox(LoggingPupEnabled, new Vector2(x, y -= sepr), softGray, softGray, softGray);
+                    AddCheckbox(LoggingStatusEnabled, new Vector2(x, y -= sepr), softGray, softGray, softGray);
                     AddCheckbox(DisableBeingGrabbed, new Vector2(x, y -= sepr), softYellow, softYellow, softYellow);
                     AddCheckbox(UseBothHands, new Vector2(x, y -= sepr), softYellow, softYellow, softYellow);
                     AddCheckbox(SpearmasterTwoHanded, new Vector2(x, y -= sepr), softYellow, softYellow, softYellow);
 
                     /**************** Experimental ****************/
-                    curTab++;
+                    CurTab++;
                     AddTitle();
                     x = 150f;
                     y = 540f;
                     sepr = 30f;
                     AddCheckbox(ModAutoDisabledToggle, new Vector2(x, y -= sepr), softRed, softRed, softRed);
+                    AddCheckbox(ManualPupChange, new Vector2(x, y -= sepr), softRed, softRed, softRed);
+                    AddFloatSlider(SizeModifier, new Vector2(20f, y -= sepr + 10f), 0.01f, 5f, 400, softRed, softRed, softRed);
+                    AddText("Note: Size modifier will change your hitbox, and not visually, if you want a good experience do +/- 0.30", new Vector2(x, y -= sepr), softRed);
+                    AddText("I kept this unrestricted because I know some of you want to screw around :p", new Vector2(x, y -= sepr), softRed);
 
                     Log("Added all options...");
                 }
@@ -154,7 +171,7 @@ namespace Pupifier
                 OpLabel title = new(new Vector2(150f, 560f), new Vector2(300f, 30f), PluginInfo.PluginName, bigText: true);
                 OpLabel version = new(new Vector2(150f, 540f), new Vector2(300f, 30f), $"Version {PluginInfo.PluginVersion}");
 
-                Tabs[curTab].AddItems(new UIelement[]
+                Tabs[CurTab].AddItems(new UIelement[]
                 {
                     title,
                     version
@@ -171,7 +188,7 @@ namespace Pupifier
                     color = (Color)clr,
                 };
 
-                Tabs[curTab].AddItems(new UIelement[]
+                Tabs[CurTab].AddItems(new UIelement[]
                 {
                     label
                 });
@@ -201,7 +218,7 @@ namespace Pupifier
                     color = (Color)clrtext
                 };
 
-                Tabs[curTab].AddItems(new UIelement[]
+                Tabs[CurTab].AddItems(new UIelement[]
                 {
                     slider,
                     label
@@ -232,7 +249,7 @@ namespace Pupifier
                     color = (Color)clrtext
                 };
 
-                Tabs[curTab].AddItems(new UIelement[]
+                Tabs[CurTab].AddItems(new UIelement[]
                 {
                     slider,
                     label
@@ -241,7 +258,7 @@ namespace Pupifier
 
             private void AddIcon(Vector2 pos, string iconName)
             {
-                Tabs[curTab].AddItems(new UIelement[]
+                Tabs[CurTab].AddItems(new UIelement[]
                 {
                     new OpImage(pos, iconName)
                 });
@@ -270,7 +287,7 @@ namespace Pupifier
                     color = (Color)clrtext
                 };
 
-                Tabs[curTab].AddItems(new UIelement[]
+                Tabs[CurTab].AddItems(new UIelement[]
                 {
                     checkbox,
                     label
@@ -300,7 +317,7 @@ namespace Pupifier
                     color = (Color)clrtext
                 };
 
-                Tabs[curTab].AddItems(new UIelement[]
+                Tabs[CurTab].AddItems(new UIelement[]
                 {
                     keyBinder,
                     label
@@ -348,7 +365,7 @@ namespace Pupifier
                 label.alignment = alH;
                 label.verticalAlignment = OpLabel.LabelVAlignment.Center;
 
-                Tabs[curTab].AddItems(new UIelement[]
+                Tabs[CurTab].AddItems(new UIelement[]
                 {
                     box,
                     label
@@ -379,7 +396,7 @@ namespace Pupifier
                     description = option.info.description
                 };
 
-                Tabs[curTab].AddItems(new UIelement[]
+                Tabs[CurTab].AddItems(new UIelement[]
                 {
                     component,
                     label

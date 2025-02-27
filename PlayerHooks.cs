@@ -5,7 +5,9 @@ using UnityEngine;
 using MonoMod.RuntimeDetour;
 using MoreSlugcats;
 using System.Collections.Generic;
+using System.Linq;
 using RWCustom;
+using UnityEngine.Serialization;
 
 namespace Pupifier;
 
@@ -40,6 +42,8 @@ public partial class Pupifier
 
         // In movement if it's true we can keep walking into walls, which shouldn't happen
         IL.Player.MovementUpdate += Player_AppendToIsSlugpupCheck;
+        // To have persistent body size
+        On.Player.MovementUpdate += Player_MovementUpdate;
         
         // False in SlugcatGrab if we have using both arms enabled or if were spearmaster and we want to pick up a spear
         IL.Player.SlugcatGrab += Player_SlugcatGrabAppendToIsSlugpupCheck;
@@ -51,6 +55,17 @@ public partial class Pupifier
 
         // Allows grabbing other players
         IL.Player.Grabability += Player_AppendPupCheckGrabability;
+    }
+    
+    private void Player_MovementUpdate(On.Player.orig_MovementUpdate orig, Player self, bool eu)
+    {
+        orig(self, eu);
+        
+        if (rainMeadowEnabled)
+        {
+            if (GamemodeIsMeadow()) return;
+        }
+        if (Options.ManualPupChange.Value && self.rollDirection == 0 && slugpupEnabled) self.bodyChunkConnections[0].distance = 12f * Options.SizeModifier.Value;
     }
 
     private void Player_WallJump(On.Player.orig_WallJump orig, Player self, int direction)
@@ -240,7 +255,7 @@ public partial class Pupifier
 
     public bool Player_CheckGrabability(Player player)
     {
-        if (RainMeadowEnabled) return Player_CheckGrababilityMeadow(player);
+        if (rainMeadowEnabled) return Player_CheckGrababilityMeadow(player);
         return !Options.DisableBeingGrabbed.Value;
     }
 
@@ -341,26 +356,40 @@ public partial class Pupifier
             LogError(ex, "Error in Player_AppendPupCheck");
         }
     }
+    
+    private static readonly Dictionary<SlugcatStats.Name, (float[] rads, float[] connectionRads)> TailsDict = new();
 
     private void Player_SetPupStatus(On.Player.orig_setPupStatus orig, Player self, bool set)
     {
         orig(self, set);
 
+        if (rainMeadowEnabled)
+        {
+            if (GamemodeIsMeadow()) return;
+        }
+
         try
         {
             if (self.graphicsModule is PlayerGraphics playerGraphics)
             {
-                Log("Changed our tail.");
-                float tail = 0.85f + 0.3f * Mathf.Lerp(1, 0.5f, self.playerState.isPup ? 0.5f : 0f);
-                float tailConnection = (0.75f + 0.5f * 1) * (self.playerState.isPup ? 0.5f : 1f);
-                playerGraphics.tail[0].rad = 6f * tail;
-                playerGraphics.tail[0].connectionRad = 4f * tailConnection;
-                playerGraphics.tail[1].rad = 4f * tail;
-                playerGraphics.tail[1].connectionRad = 7f * tailConnection;
-                playerGraphics.tail[2].rad = 2.5f * tail;
-                playerGraphics.tail[2].connectionRad = 7f * tailConnection;
-                playerGraphics.tail[3].rad = 1f * tail;
-                playerGraphics.tail[3].connectionRad = 7f * tailConnection;
+                if (!TailsDict.TryGetValue(self.SlugCatClass, out var originalValues))
+                {
+                    var rads = playerGraphics.tail.Select(t => t.rad).ToArray();
+                    var connectionRads = playerGraphics.tail.Select(t => t.connectionRad).ToArray();
+                    originalValues = (rads, connectionRads);
+                    TailsDict.Add(self.SlugCatClass, originalValues);
+                }
+
+                Log("Adjusting tail dimensions");
+            
+                float scale = slugpupEnabled ? 0.8f : 1f;
+                for (int i = 0; i < playerGraphics.tail.Length; i++)
+                {
+                    if (i >= originalValues.rads.Length) break;
+                
+                    playerGraphics.tail[i].rad = originalValues.rads[i] * scale;
+                    playerGraphics.tail[i].connectionRad = originalValues.connectionRads[i] * scale;
+                }
             }
         }
         catch (Exception ex)
@@ -388,29 +417,50 @@ public partial class Pupifier
         }
     }
 
-    public bool SlugpupEnabled = false;
-    bool LocalPlayer = false;
-    bool RanOnce = false;
+    public bool slugpupEnabled = false;
+    bool _localPlayer = false;
     private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
     {
-        if (RainMeadowEnabled && !RanOnce)
-        {
-            if (PlayerIsLocal(self) && GameIsMeadow())
-            {
-                ToggleGrabbable(self);
-                RanOnce = true;
-            };
-        };
         Player_ChangeMode(self);
         orig(self, eu);
     }
 
+    private void Player_ManualPupChange(Player self)
+    {
+        if (self.isNPC || slugpupEnabled == self.playerState.isPup) return;
+        
+        float newMass = (0.7f + (slugpupEnabled ? 0.05f : 0f) * self.slugcatStats.bodyWeightFac +
+                         (self.bool1 && slugpupEnabled ? 0.18f : 0f) * Options.SizeModifier.Value) / 2f;
+        Log($"ManualPupChange: Changing mass to {newMass}, reducing tail size and trying to reduce connection distance");
+        
+        // Manual body size (mass)
+        // base + 0.05 if slugpup
+        // 0.18 if slugpup and mysterious "bool1"
+        // and then divided by 2f
+        self.bodyChunks[0].mass = newMass;
+        self.bodyChunks[1].mass = newMass;
+        
+        // I would love to make this work but it'll take some time to find what is overriding this when we assign it
+        // distance 17f normal, 12f slugpup
+        //self.bodyChunkConnections = new []{new PhysicalObject.BodyChunkConnection(self.bodyChunks[0], self.bodyChunks[1], slugpupEnabled ? 12f : 17f, PhysicalObject.BodyChunkConnection.Type.Normal, 1f, 0.5f)};
+        self.bodyChunkConnections[0].distance = slugpupEnabled ? 12f : 17f;
+    }
+
     private void Player_ChangeMode(Player self)
     {
-        if (self.isNPC || SlugpupEnabled == self.playerState.isPup || self == null) return;
-        if (RainMeadowEnabled) LocalPlayer = PlayerIsLocal(self);
-        else LocalPlayer = false;
-        if (RainMeadowEnabled && !LocalPlayer) return;
+        if (self.isNPC || slugpupEnabled == self.playerState.isPup) return;
+        _localPlayer = rainMeadowEnabled && PlayerIsLocal(self);
+        if (rainMeadowEnabled)
+        {
+            if (!_localPlayer) return;
+            if (GamemodeIsMeadow())
+            {
+                Log("[DO NOT REPORT THIS] Detected Meadow Gamemode, Henpemaz has disabled pups in this mode and I am respecting that.");
+                self.setPupStatus(false);
+                slugpupEnabled = false;
+                return;
+            }
+        }
 
         try
         {
@@ -418,52 +468,114 @@ public partial class Pupifier
         }
         catch (Exception ex)
         {
-            LogError(ex, "Error in Player_Update");
+            LogError(ex, "Error in Player_SetMode");
         }
     }
 
-    private static readonly Dictionary<SlugcatStats.Name, SlugcatStats> slugcatStatsDictionary = new() { };
+    private static readonly Dictionary<SlugcatStats.Name, SlugBaseStats> BaseStatsCache = new();
+    private static readonly Dictionary<SlugcatStats.Name, SlugBaseStats> MalnourishedBaseStatsCache = new();
+
+    private readonly struct SlugBaseStats
+    {
+        public readonly float bodyWeightFac;
+        public readonly float generalVisibilityBonus;
+        public readonly float visualStealthInSneakMode;
+        public readonly float loudnessFac;
+        public readonly float lungsFac;
+        public readonly float poleClimbSpeedFac;
+        public readonly float corridorClimbSpeedFac;
+        public readonly float runspeedFac;
+
+        public SlugBaseStats(SlugcatStats stats)
+        {
+            bodyWeightFac = stats.bodyWeightFac;
+            generalVisibilityBonus = stats.generalVisibilityBonus;
+            visualStealthInSneakMode = stats.visualStealthInSneakMode;
+            loudnessFac = stats.loudnessFac;
+            lungsFac = stats.lungsFac;
+            poleClimbSpeedFac = stats.poleClimbSpeedFac;
+            corridorClimbSpeedFac = stats.corridorClimbSpeedFac;
+            runspeedFac = stats.runspeedFac;
+        }
+    }
+    
     private void Player_SetMode(Player self)
     {
         // setPupStatus sets isPup and also updates body proportions
         // we multiply by survivor -> slugpup values (aka difference between survivor and slugpup)
         // Change body size using setPupStatus
-        if (!slugcatStatsDictionary.TryGetValue(self.SlugCatClass, out SlugcatStats newStats))
+        if (!BaseStatsCache.TryGetValue(self.SlugCatClass, out SlugBaseStats baseStats))
         {
-            newStats = new(self.SlugCatClass, self.Malnourished);
-            slugcatStatsDictionary.Add(self.SlugCatClass, newStats);
+            var tempStats = new SlugcatStats(self.SlugCatClass, false);
+            baseStats = new SlugBaseStats(tempStats);
+            BaseStatsCache.Add(self.SlugCatClass, baseStats);
         }
-        Log($"Set pup status for {(LocalPlayer ? "local " : "non-local")} player to {SlugpupEnabled}, RainMeadow is {(RainMeadowEnabled ? "enabled" : "disabled")}");
+
+        if (!MalnourishedBaseStatsCache.TryGetValue(self.SlugCatClass, out SlugBaseStats malnourishedBaseStats))
+        {
+            var tempStats = new SlugcatStats(self.SlugCatClass, true);
+            malnourishedBaseStats = new SlugBaseStats(tempStats);
+            MalnourishedBaseStatsCache.Add(self.SlugCatClass, malnourishedBaseStats);
+        }
+
+        var activeBaseStats = self.slugcatStats.malnourished 
+            ? malnourishedBaseStats 
+            : baseStats;
+        
+        if (Options.LoggingPupEnabled.Value) Log($"Set pup status for {(_localPlayer ? "local " : "non-local")} player to {slugpupEnabled}, RainMeadow is {(rainMeadowEnabled ? "enabled" : "disabled")}");
+
         // Change body size using setPupStatus
-        self.setPupStatus(SlugpupEnabled);
-        if (RainMeadowEnabled)
+        self.setPupStatus(slugpupEnabled);
+        // Change body size manually if toggled on
+        if (Options.ManualPupChange.Value) Player_ManualPupChange(self);
+        
+        // Set grabability for others if in meadow
+        if (rainMeadowEnabled)
         {
             if (GameIsMeadow()) ToggleGrabbable(self);
         };
+        
         // Set relative stats on status
         if (!Options.UseSlugpupStatsToggle.Value) return;
-        if (SlugpupEnabled)
+        LogStats(self, false);
+        if (slugpupEnabled)
         {
-            self.slugcatStats.bodyWeightFac = newStats.bodyWeightFac * 0.65f * Options.BodyWeightFac.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.generalVisibilityBonus = newStats.generalVisibilityBonus * 0.8f * Options.VisibilityBonus.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.visualStealthInSneakMode = newStats.visualStealthInSneakMode * 1.2f * Options.VisualStealthInSneakMode.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.loudnessFac = newStats.loudnessFac * 0.5f * Options.LoudnessFac.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.lungsFac = newStats.lungsFac * 0.8f * Options.LungsFac.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.poleClimbSpeedFac = newStats.poleClimbSpeedFac * 0.8f * Options.PoleClimbSpeedFac.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.corridorClimbSpeedFac = newStats.corridorClimbSpeedFac * 0.8f * Options.CorridorClimbSpeedFac.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.runspeedFac = newStats.runspeedFac * 0.8f * Options.RunSpeedFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.bodyWeightFac = activeBaseStats.bodyWeightFac * 0.65f * Options.BodyWeightFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.generalVisibilityBonus = activeBaseStats.generalVisibilityBonus * 0.8f * Options.VisibilityBonus.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.visualStealthInSneakMode = activeBaseStats.visualStealthInSneakMode * 1.2f * Options.VisualStealthInSneakMode.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.loudnessFac = activeBaseStats.loudnessFac * 0.5f * Options.LoudnessFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.lungsFac = activeBaseStats.lungsFac * 0.8f * Options.LungsFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.poleClimbSpeedFac = activeBaseStats.poleClimbSpeedFac * 0.8f * Options.PoleClimbSpeedFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.corridorClimbSpeedFac = activeBaseStats.corridorClimbSpeedFac * 0.8f * Options.CorridorClimbSpeedFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.runspeedFac = activeBaseStats.runspeedFac * 0.8f * Options.RunSpeedFac.Value * Options.GlobalModifier.Value;
         }
         else
         {
-            self.slugcatStats.bodyWeightFac = newStats.bodyWeightFac;
-            self.slugcatStats.generalVisibilityBonus = newStats.generalVisibilityBonus;
-            self.slugcatStats.visualStealthInSneakMode = newStats.visualStealthInSneakMode;
-            self.slugcatStats.loudnessFac = newStats.loudnessFac;
-            self.slugcatStats.lungsFac = newStats.lungsFac;
-            self.slugcatStats.poleClimbSpeedFac = newStats.poleClimbSpeedFac;
-            self.slugcatStats.corridorClimbSpeedFac = newStats.corridorClimbSpeedFac;
-            self.slugcatStats.runspeedFac = newStats.runspeedFac;
+            // Direct assignment from value type ensures no reference issues
+            self.slugcatStats.bodyWeightFac = activeBaseStats.bodyWeightFac;
+            self.slugcatStats.generalVisibilityBonus = activeBaseStats.generalVisibilityBonus;
+            self.slugcatStats.visualStealthInSneakMode = activeBaseStats.visualStealthInSneakMode;
+            self.slugcatStats.loudnessFac = activeBaseStats.loudnessFac;
+            self.slugcatStats.lungsFac = activeBaseStats.lungsFac;
+            self.slugcatStats.poleClimbSpeedFac = activeBaseStats.poleClimbSpeedFac;
+            self.slugcatStats.corridorClimbSpeedFac = activeBaseStats.corridorClimbSpeedFac;
+            self.slugcatStats.runspeedFac = activeBaseStats.runspeedFac;
         }
+        LogStats(self, true);
+    }
+
+    private void LogStats(Player self, bool prepost)
+    {
+        if (!Options.LoggingStatusEnabled.Value) return;
+        Log($"Stats {(prepost ? "post" : "pre")}-change");
+        Log($"bodyWeightFac: {self.slugcatStats.bodyWeightFac}");
+        Log($"generalVisibilityBonus: {self.slugcatStats.generalVisibilityBonus}");
+        Log($"visualStealthInSneakMode: {self.slugcatStats.visualStealthInSneakMode}");
+        Log($"loudnessFac: {self.slugcatStats.loudnessFac}");
+        Log($"lungsFac: {self.slugcatStats.lungsFac}");
+        Log($"poleClimbSpeedFac: {self.slugcatStats.poleClimbSpeedFac}");
+        Log($"corridorClimbSpeedFac: {self.slugcatStats.corridorClimbSpeedFac}");
+        Log($"runspeedFac: {self.slugcatStats.runspeedFac}");
     }
 
     private void Player_SlugcatHandUpdate(On.SlugcatHand.orig_Update orig, SlugcatHand self)

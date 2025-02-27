@@ -3,6 +3,7 @@ using System.Security.Permissions;
 using BepInEx;
 using System.Reflection;
 using UnityEngine;
+using UnityEngine.Serialization;
 
 
 [assembly: AssemblyVersion(PluginInfo.PluginVersion)]
@@ -12,66 +13,73 @@ using UnityEngine;
 namespace Pupifier
 {
     [BepInDependency("henpemaz.rainmeadow", BepInDependency.DependencyFlags.SoftDependency)]
+    [BepInDependency("elumenix.pupify", BepInDependency.DependencyFlags.SoftDependency)]
     [BepInPlugin(PluginInfo.PluginGUID, PluginInfo.PluginName, PluginInfo.PluginVersion)]
     public partial class Pupifier : BaseUnityPlugin
     {
-        public static Pupifier instance;
+        public static Pupifier Instance;
         public static PupifierOptions Options;
-        public static PlayerData playerData;
-        public bool RainMeadowEnabled;
+        public static PlayerData PlayerData;
+        [FormerlySerializedAs("RainMeadowEnabled")] public bool rainMeadowEnabled;
 
         public void OnEnable()
         {
-            instance = this;
+            Instance = this;
             Options = new PupifierOptions();
-            playerData = new PlayerData();
+            PlayerData = new PlayerData();
 
             On.RainWorld.OnModsInit += RainWorldOnOnModsInit;
         }
 
         private void Update()
         {
-            if (!IsInit || Options == null) return;
+            if (!_isInit || Options == null) return;
             if (Input.GetKeyDown(Options.SlugpupKey.Value) || (Options.UseSecondaryKeyToggle.Value && Input.GetKeyDown(Options.SlugpupSecondaryKey.Value)))
             {
-                SlugpupEnabled = !SlugpupEnabled;
+                slugpupEnabled = !slugpupEnabled;
+                if (Options.LoggingPupEnabled.Value)
+                {
+                    Log($"Key pressed, will change to {(slugpupEnabled ? "pup" : "adult")}");
+                }
             }
         }
 
-        private bool IsInit;
+        private bool _isInit;
         private void RainWorldOnOnModsInit(On.RainWorld.orig_OnModsInit orig, RainWorld self)
         {
             orig(self);
             try
             {
-                if (IsInit) return;
+                if (_isInit) return;
 
-                if (!BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("elumenix.pupify") || Options.ModAutoDisabledToggle.Value)
-                {
                     if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("henpemaz.rainmeadow"))
                     {
                         Log("RainMeadow is installed. Enabling compatibility");
-                        RainMeadowEnabled = true;
+                        rainMeadowEnabled = true;
                     }
                     else
                     {
                         Log("RainMeadow isn't installed. Skipping checks.");
-                        RainMeadowEnabled = false;
+                        rainMeadowEnabled = false;
                     }
-                    PlayerHooks();
-                    Log("Hooked into methods...");
-                }
-                else
-                {
-                    Log("Pupify is installed, we do not support this mod.");
-                }
+                    if (!BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("elumenix.pupify") || Options.ModAutoDisabledToggle.Value)
+                    {
+                        PlayerHooks();
+                        Log("Hooked into methods...");
+                    }
+                    else
+                    {
+                        Log("Pupify is installed, we do not support this mod.");
+                        Log("Check the remix options if you want to enable this mod anyway. (Experimental Tab)");
+                        Log("Skipped hooking into methods.");
+                    }
 
                 On.RainWorldGame.ShutDownProcess += RainWorldGameOnShutDownProcess;
                 On.GameSession.ctor += GameSessionOnctor;
 
                 MachineConnector.SetRegisteredOI(PluginInfo.PluginGUID, Options);
                 Log($"Registered OI...");
-                IsInit = true;
+                _isInit = true;
                 Log($"Fully initialized!");
             }
             catch (Exception ex)
