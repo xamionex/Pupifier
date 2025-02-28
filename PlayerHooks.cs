@@ -6,18 +6,19 @@ using MonoMod.RuntimeDetour;
 using MoreSlugcats;
 using System.Collections.Generic;
 using System.Linq;
-using HarmonyLib;
-using RainMeadow;
 using RWCustom;
-using UnityEngine.Serialization;
 
 namespace Pupifier;
 
 public partial class Pupifier
 {
-
     private void PlayerHooks()
     {
+        if (IsModEnabled("henpemaz.rainmeadow"))
+        {
+            Log("Detected Rain Meadow");
+        }
+        
         On.Player.Update += Player_Update;
 
         On.Player.setPupStatus += Player_SetPupStatus;
@@ -30,6 +31,7 @@ public partial class Pupifier
 
         // we set isSlugpup, RenderAsPup to playerstate
         new Hook(typeof(Player).GetProperty("isSlugpup").GetGetMethod(), (Func<Player, bool> orig, Player self) => orig(self) || (!self.isNPC && self.playerState.isPup));
+        //new Hook(typeof(PlayerGraphics).GetProperty("RenderAsPup").GetGetMethod(), (Func<PlayerGraphics, bool> orig, PlayerGraphics self) => orig(self) || (!self.player.isNPC && self.player.playerState.isPup));
 
         // patch because it checks isSlugpup and tries getting npcStats
         new Hook(typeof(Player).GetProperty("slugcatStats").GetGetMethod(), (Func<Player, SlugcatStats> orig, Player self) => (self.isSlugpup && !self.isNPC) ? self.abstractCreature.world.game.session.characterStats : orig(self));
@@ -57,21 +59,15 @@ public partial class Pupifier
 
         // Allows grabbing other players
         IL.Player.Grabability += Player_AppendPupCheckGrabability;
-
-        HarmonyInstance = new Harmony(PluginInfo.PluginGUID);
-        if (rainMeadowEnabled)
-        {
-            HarmonyInstance.PatchAll(typeof(MeadowPlayerControllerPatches));
-        }
     }
-    
+
     private void Player_MovementUpdate(On.Player.orig_MovementUpdate orig, Player self, bool eu)
     {
         orig(self, eu);
         
-        if (rainMeadowEnabled)
+        if (IsModEnabled("henpemaz.rainmeadow"))
         {
-            if (GamemodeIsMeadow()) return;
+            if (PupifierMeadowCompat.GamemodeIsMeadow()) return;
         }
         if (Options.ManualPupChange.Value && self.rollDirection == 0 && slugpupEnabled) self.bodyChunkConnections[0].distance = 12f * Options.SizeModifier.Value;
     }
@@ -263,7 +259,7 @@ public partial class Pupifier
 
     public bool Player_CheckGrabability(Player player)
     {
-        if (rainMeadowEnabled) return Player_CheckGrababilityMeadow(player);
+        if (IsModEnabled("henpemaz.rainmeadow")) return PupifierMeadowCompat.Player_CheckGrababilityMeadow(player);
         return !Options.DisableBeingGrabbed.Value;
     }
 
@@ -365,15 +361,50 @@ public partial class Pupifier
         }
     }
     
+    private void Player_AppendPupCheckGraphics(ILContext il)
+    {
+        //351	0328	isinst	Player
+        //352	032D	ldfld	class SlugcatStats/Name Player::SlugCatClass
+        //353	0332	ldsfld	class SlugcatStats/Name MoreSlugcats.MoreSlugcatsEnums/SlugcatStatsName::Slugpup
+        //354	0337	call	bool class ExtEnum`1<class SlugcatStats/Name>::op_Equality(class ExtEnum`1<!0>, class ExtEnum`1<!0>)
+        //355	033C	brfalse.s	363 (0352) ldsfld bool ModManager::CoopAvailable
+        try
+        {
+            // 1 2 3
+            var MatchIteration = 0;
+            var MatchList = new List<int>() {0,1,2};
+            var c = new ILCursor(il);
+            // Match the IL sequence for `SlugCatClass == Slugpup`
+            while (c.TryGotoNext(MoveType.AfterLabel,
+                       i => i.MatchLdfld(typeof(Player).GetField("SlugCatClass")), // Load SlugCatClass
+                       i => i.MatchLdsfld(typeof(MoreSlugcatsEnums.SlugcatStatsName).GetField("Slugpup")), // Load Slugpup
+                       i => i.MatchCall(typeof(ExtEnum<SlugcatStats.Name>).GetMethod("op_Equality")) // Call ExtEnum op_Equality
+                   ))
+            {
+                if (!MatchList.Contains(MatchIteration))
+                {
+                    c.Emit(OpCodes.Dup); // Duplicate Player
+                    c.Index += 3; // Move to delegate
+                    c.EmitDelegate((Player player, bool isSlugpup) => isSlugpup || (!player.isNPC && player.playerState.isPup));
+                }
+                MatchIteration++;
+            }
+        }
+        catch (Exception ex)
+        {
+            LogError(ex, "Error in Player_AppendPupCheck");
+        }
+    }
+    
     private static readonly Dictionary<SlugcatStats.Name, (float[] rads, float[] connectionRads)> TailsDict = new();
 
     private void Player_SetPupStatus(On.Player.orig_setPupStatus orig, Player self, bool set)
     {
         orig(self, set);
 
-        if (rainMeadowEnabled)
+        if (IsModEnabled("henpemaz.rainmeadow"))
         {
-            if (GamemodeIsMeadow()) return;
+            if (PupifierMeadowCompat.GamemodeIsMeadow()) return;
         }
 
         try
@@ -457,11 +488,11 @@ public partial class Pupifier
     private void Player_ChangeMode(Player self)
     {
         if (self.isNPC || slugpupEnabled == self.playerState.isPup) return;
-        _localPlayer = rainMeadowEnabled && PlayerIsLocal(self);
-        if (rainMeadowEnabled)
+        if (IsModEnabled("henpemaz.rainmeadow"))
         {
+            _localPlayer = PupifierMeadowCompat.PlayerIsLocal(self);
             if (!_localPlayer) return;
-            if (GamemodeIsMeadow())
+            if (PupifierMeadowCompat.GamemodeIsMeadow())
             {
                 Log("[DO NOT REPORT THIS] Detected Meadow Gamemode, Henpemaz has disabled pups in this mode and I am respecting that.");
                 self.setPupStatus(false);
@@ -530,7 +561,7 @@ public partial class Pupifier
             ? malnourishedBaseStats 
             : baseStats;
         
-        if (Options.LoggingPupEnabled.Value) Log($"Set pup status for {(_localPlayer ? "local " : "non-local")} player to {slugpupEnabled}, RainMeadow is {(rainMeadowEnabled ? "enabled" : "disabled")}");
+        if (Options.LoggingPupEnabled.Value) Log($"Set pup status for {(_localPlayer ? "local" : "non-meadow")} player to {slugpupEnabled}, RainMeadow is {(IsModEnabled("henpemaz.rainmeadow") ? "enabled" : "disabled")}");
 
         // Change body size using setPupStatus
         self.setPupStatus(slugpupEnabled);
@@ -538,9 +569,9 @@ public partial class Pupifier
         if (Options.ManualPupChange.Value) Player_ManualPupChange(self);
         
         // Set grabability for others if in meadow
-        if (rainMeadowEnabled)
+        if (IsModEnabled("henpemaz.rainmeadow"))
         {
-            if (GameIsMeadow()) ToggleGrabbable(self);
+            if (PupifierMeadowCompat.GameIsMeadow()) PupifierMeadowCompat.ToggleGrabbable(self);
         };
         
         // Set relative stats on status
@@ -597,7 +628,7 @@ public partial class Pupifier
         if (self.owner.owner is not Player player || (!player.isNPC && !player.playerState.isPup)) return;
 
         // I don't know how to fix arms when crawling, it's not even noticable so I'm just not gonna fix it
-        if (player.bodyMode == Player.BodyModeIndex.Crawl) return;
+        //if (player.bodyMode == Player.BodyModeIndex.Crawl) {};
 
         if (player.animation == Player.AnimationIndex.HangUnderVerticalBeam)
         {
