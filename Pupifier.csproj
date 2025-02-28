@@ -29,7 +29,7 @@ Report Issues on github please! https://github.com/xamionex/Pupifier/issues/new
 Steam doesn't give me notifications for comments on my own mods for some reason,
 so I might not see your comment because I need to literally go to the mod page to see it, and I'm not doing that every day.
     </ProductDescription>
-    <ModVersion>2.0.3</ModVersion>
+    <ModVersion>2.0.5</ModVersion>
     <Version>2.0.8</Version>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
