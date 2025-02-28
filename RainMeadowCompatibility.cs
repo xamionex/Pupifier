@@ -1,6 +1,8 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Reflection;
+using System.Reflection.Emit;
 using HarmonyLib;
 using RainMeadow;
 
@@ -10,15 +12,40 @@ using RainMeadow;
 
 namespace Pupifier
 {
-    [HarmonyPatch(typeof(MeadowPlayerController))]
+    [HarmonyPatch(typeof(MeadowPlayerController), "Player_Update")]
     public static class MeadowPlayerControllerPatches
     {
-        [HarmonyPatch("Player_Update")]
-        [HarmonyPostfix]
-        private static void Postfix_Player_Update(Player self, bool eu)
+        private static bool GetIsPupValue()
         {
-            if (!Pupifier.Options.EnableInMeadowGamemode.Value) return;
-            self.playerState.isPup = Pupifier.Instance.slugpupEnabled;
+            return Pupifier.Options.EnableInMeadowGamemode.Value && Pupifier.Instance.slugpupEnabled;
+        }
+        
+        static IEnumerable<CodeInstruction> Transpiler(IEnumerable<CodeInstruction> instructions)
+        {
+            // stfld // Set Field
+            // ldarg.1 // Player
+            // callvirt // PlayerState.isPup
+            // ldc.i4.0 // False
+            var codes = new List<CodeInstruction>(instructions);
+            FieldInfo isPupField = AccessTools.Field(typeof(PlayerState), nameof(PlayerState.isPup));
+
+            for (int i = 0; i < codes.Count; i++)
+            {
+                // Check if the current instruction is storing to PlayerState.isPup
+                if (codes[i].opcode == OpCodes.Stfld && codes[i].operand as FieldInfo == isPupField)
+                {
+                    // Check if the previous instruction is loading 'false' (ldc.i4.0)
+                    if (i > 0 && codes[i - 1].opcode == OpCodes.Ldc_I4_0)
+                    {
+                        // Replace loading 'false' with a call to GetIsPupValue
+                        codes[i - 1] = new CodeInstruction(OpCodes.Call, 
+                            AccessTools.Method(typeof(MeadowPlayerControllerPatches), nameof(MeadowPlayerControllerPatches.GetIsPupValue)));
+                        break;
+                    }
+                }
+            }
+
+            return codes;
         }
     }
 
