@@ -150,7 +150,7 @@ This mod was made specifically for meadow but works for non-meadow as well
   </Target>
 
   <Target Name="ZipProjectDirectory" AfterTargets="Build">
-    <Exec Command="zip -r '$(ProjectDir)$(RootNamespace).zip' '$(ProjectDir)$(RootNamespace)'" Condition="'$(OS)' == 'Unix'" />
+    <Exec Command="zip -r $(RootNamespace).zip $(RootNamespace)/*" Condition="'$(OS)' == 'Unix'" />
     <Exec Command="powershell -Command &quot;Compress-Archive -Path '$(ProjectDir)$(RootNamespace)' -DestinationPath '$(ProjectDir)$(RootNamespace).zip' -Force&quot;" Condition="'$(OS)' == 'Windows_NT'" />
   </Target>
 </Project>
