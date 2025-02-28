@@ -33,6 +33,7 @@ namespace Pupifier
             public readonly Configurable<bool> ManualPupChange;
             public readonly Configurable<bool> LoggingPupEnabled;
             public readonly Configurable<bool> LoggingStatusEnabled;
+            public readonly Configurable<bool> EnableInMeadowGamemode;
 
             public PupifierOptions()
             {
@@ -59,6 +60,7 @@ namespace Pupifier
                 // Toggles tab
                 LoggingPupEnabled = config.Bind(nameof(LoggingPupEnabled), true, new ConfigurableInfo("If enabled, console will log pup changes", null, "", "Enable logging for pup change"));
                 LoggingStatusEnabled = config.Bind(nameof(LoggingStatusEnabled), false, new ConfigurableInfo("If enabled, console will log stats upon changes", null, "", "Enable logging for stats when changing"));
+                EnableInMeadowGamemode = config.Bind(nameof(EnableInMeadowGamemode), false, new ConfigurableInfo("If enabled, you will locally be a pup in the meadow gamemode, since you are blocked in the meadow gamemode from being a pup, it will only show locally, and for anyone else that has the mod", null, "", "Enable in MeadowGamemode (read desc)"));
                 DisableBeingGrabbed = config.Bind(nameof(DisableBeingGrabbed), false, new ConfigurableInfo("If enabled, you can't be grabbed", null, "", "Disable being Grabbed"));
                 UseBothHands = config.Bind(nameof(UseBothHands), false, new ConfigurableInfo("If enabled, you can use both hands as a pup", null, "", "Enable using both hands"));
                 SpearmasterTwoHanded = config.Bind(nameof(SpearmasterTwoHanded), true, new ConfigurableInfo("If enabled, you can use both hands for spears as spearmaster", null, "", "Spearmaster can hold 2 spears"));
@@ -138,6 +140,7 @@ namespace Pupifier
                     sepr = 30f;
                     AddCheckbox(LoggingPupEnabled, new Vector2(x, y -= sepr), softGray, softGray, softGray);
                     AddCheckbox(LoggingStatusEnabled, new Vector2(x, y -= sepr), softGray, softGray, softGray);
+                    AddCheckbox(EnableInMeadowGamemode, new Vector2(x, y -= sepr), softYellow, softYellow, softYellow);
                     AddCheckbox(DisableBeingGrabbed, new Vector2(x, y -= sepr), softYellow, softYellow, softYellow);
                     AddCheckbox(UseBothHands, new Vector2(x, y -= sepr), softYellow, softYellow, softYellow);
                     AddCheckbox(SpearmasterTwoHanded, new Vector2(x, y -= sepr), softYellow, softYellow, softYellow);

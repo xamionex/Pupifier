@@ -6,6 +6,8 @@ using MonoMod.RuntimeDetour;
 using MoreSlugcats;
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
+using RainMeadow;
 using RWCustom;
 using UnityEngine.Serialization;
 
@@ -55,6 +57,12 @@ public partial class Pupifier
 
         // Allows grabbing other players
         IL.Player.Grabability += Player_AppendPupCheckGrabability;
+
+        HarmonyInstance = new Harmony(PluginInfo.PluginGUID);
+        if (rainMeadowEnabled)
+        {
+            HarmonyInstance.PatchAll(typeof(MeadowPlayerControllerPatches));
+        }
     }
     
     private void Player_MovementUpdate(On.Player.orig_MovementUpdate orig, Player self, bool eu)

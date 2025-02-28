@@ -1,34 +1,47 @@
 {
     "id": "amione.Pupifier",
     "name": "Pupifier",
-    "version": "2.0.5",
+    "version": "2.0.6",
     "target_game_version": "v1.9.15",
     "authors": "amione - Creator, youbitchoc - For helping in development, henpemaz - For Rain Meadow, Maxi Mol - For Mouse Drag code, LDani, simichan1227 - For testing the s**t out of my mod (It was kinda encouraging)",
-    "description": "Lets you become a slugpup in Rain World with a push of a button (dynamic in-game transform), with meadow support. This mod was made specifically for meadow but works for non-meadow as well
+    "description": "[h2]Lets you become a slugpup in Rain World with a push of a button[/h2]
+This mod was made specifically for meadow but works for non-meadow as well
 
-Known issues
+[hr][/hr]
+[h3]Known issues[/h3]
+[list]
+  [*]Meadow issues (not related to my mod): grabbing players and breaking if you go thru a pipe, piggybacking desync (toggle grabbability in settings)
+  [*]Meadow Gamemode: Not working; henpemaz has coded it so that pups are not allowed in the meadow gamemode, enable locally in toggles settings
+[/list]
 
-- Meadow issues (not related to my mod): 
-grabbing players and breaking if you go thru a pipe, piggybacking desync
-- Meadow Gamemode: Not working; henpemaz has coded it so that pups are not allowed in the meadow gamemode
-      
-Features
+[hr][/hr]
+[h3]Features[/h3]
+[list]
+[*] Transform into a slugpup dynamically, with a hotkey, even when in-game
+[*] Change your stats based on slugpup relativity
+[*] Supports controller input as a hotkey to change
+[*] Supports Rain Meadow
+[*] Supports Modded Slugcats
+[/list]
 
-- Transform into a slugpup dynamically, also works in Meadow
-- Change your stats based on slugpup relativity
-- Works with modded slugcats as well
+[hr][/hr]
+[h3]Q&A[/h3]
+[list] 
+  [*] Does this mod change gameplay? Yes, and a ton, you will behave almost like a slugpup, with some changes, for example, it's all relative so if you pick rivulet you will be faster than a normal slugpup
+  [*] Is it only cosmetic? No, you could try to make it, I haven't tested much but there is a toggle in the stats settings to turn off changing stats, that way you will still be small but no stats will be changed
+  [*] What is configurable? Every stat you have as a player, along with holding double spears as spearmaster or holding 2 items no matter what or not letting people grab you
+[/list]
 
-Credits
-
+[hr][/hr]
+[h3]Credits[/h3]
 - amione - Creator
 - youbitchoc - For helping in development
 - henpemaz - For Rain Meadow
 - Maxi Mol - For Mouse Drag code
 - LDani, simichan1227 - For testing the s**t out of my mod (It was kinda encouraging)
 
-Report Issues on github please! https://github.com/xamionex/Pupifier/issues/new
-Steam doesn't give me notifications for comments on my own mods for some reason,
-so I might not see your comment because I need to literally go to the mod page to see it, and I'm not doing that every day.
+[hr][/hr]
+[h3]Report Issues on github please! https://github.com/xamionex/Pupifier/issues/new[/h3]
     ",
     "requirements": ["moreslugcats"],
     "requirements_names": [],

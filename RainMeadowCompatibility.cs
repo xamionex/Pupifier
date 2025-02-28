@@ -1,6 +1,7 @@
 using System;
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
 using RainMeadow;
 
 #pragma warning disable CS8625 // Cannot convert null literal to non-nullable reference type.
@@ -9,6 +10,18 @@ using RainMeadow;
 
 namespace Pupifier
 {
+    [HarmonyPatch(typeof(MeadowPlayerController))]
+    public static class MeadowPlayerControllerPatches
+    {
+        [HarmonyPatch("Player_Update")]
+        [HarmonyPostfix]
+        private static void Postfix_Player_Update(Player self, bool eu)
+        {
+            if (!Pupifier.Options.EnableInMeadowGamemode.Value) return;
+            self.playerState.isPup = Pupifier.Instance.slugpupEnabled;
+        }
+    }
+
     public class PlayerData : OnlineResource.ResourceData
     {
         public List<OnlinePlayer> Ungrabbables = new();
@@ -64,6 +77,7 @@ namespace Pupifier
         {
             if (GameIsMeadow())
             {
+                if (Options.EnableInMeadowGamemode.Value) return false;
                 return OnlineManager.lobby.gameMode is MeadowGameMode;
             }
             return false;

@@ -2,6 +2,7 @@
 using System.Security.Permissions;
 using BepInEx;
 using System.Reflection;
+using HarmonyLib;
 using UnityEngine;
 using UnityEngine.Serialization;
 
@@ -18,6 +19,7 @@ namespace Pupifier
     public partial class Pupifier : BaseUnityPlugin
     {
         public static Pupifier Instance;
+        public static Harmony HarmonyInstance;
         public static PupifierOptions Options;
         public static PlayerData PlayerData;
         [FormerlySerializedAs("RainMeadowEnabled")] public bool rainMeadowEnabled;
