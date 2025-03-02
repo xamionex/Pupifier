@@ -516,25 +516,25 @@ public partial class Pupifier
 
     private readonly struct SlugBaseStats
     {
-        public readonly float bodyWeightFac;
-        public readonly float generalVisibilityBonus;
-        public readonly float visualStealthInSneakMode;
-        public readonly float loudnessFac;
-        public readonly float lungsFac;
-        public readonly float poleClimbSpeedFac;
-        public readonly float corridorClimbSpeedFac;
-        public readonly float runspeedFac;
+        public readonly float BodyWeightFac;
+        public readonly float GeneralVisibilityBonus;
+        public readonly float VisualStealthInSneakMode;
+        public readonly float LoudnessFac;
+        public readonly float LungsFac;
+        public readonly float PoleClimbSpeedFac;
+        public readonly float CorridorClimbSpeedFac;
+        public readonly float RunspeedFac;
 
         public SlugBaseStats(SlugcatStats stats)
         {
-            bodyWeightFac = stats.bodyWeightFac;
-            generalVisibilityBonus = stats.generalVisibilityBonus;
-            visualStealthInSneakMode = stats.visualStealthInSneakMode;
-            loudnessFac = stats.loudnessFac;
-            lungsFac = stats.lungsFac;
-            poleClimbSpeedFac = stats.poleClimbSpeedFac;
-            corridorClimbSpeedFac = stats.corridorClimbSpeedFac;
-            runspeedFac = stats.runspeedFac;
+            BodyWeightFac = stats.bodyWeightFac;
+            GeneralVisibilityBonus = stats.generalVisibilityBonus;
+            VisualStealthInSneakMode = stats.visualStealthInSneakMode;
+            LoudnessFac = stats.loudnessFac;
+            LungsFac = stats.lungsFac;
+            PoleClimbSpeedFac = stats.poleClimbSpeedFac;
+            CorridorClimbSpeedFac = stats.corridorClimbSpeedFac;
+            RunspeedFac = stats.runspeedFac;
         }
     }
     
@@ -579,26 +579,26 @@ public partial class Pupifier
         LogStats(self, false);
         if (slugpupEnabled)
         {
-            self.slugcatStats.bodyWeightFac = activeBaseStats.bodyWeightFac * 0.65f * Options.BodyWeightFac.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.generalVisibilityBonus = activeBaseStats.generalVisibilityBonus * 0.8f * Options.VisibilityBonus.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.visualStealthInSneakMode = activeBaseStats.visualStealthInSneakMode * 1.2f * Options.VisualStealthInSneakMode.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.loudnessFac = activeBaseStats.loudnessFac * 0.5f * Options.LoudnessFac.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.lungsFac = activeBaseStats.lungsFac * 0.8f * Options.LungsFac.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.poleClimbSpeedFac = activeBaseStats.poleClimbSpeedFac * 0.8f * Options.PoleClimbSpeedFac.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.corridorClimbSpeedFac = activeBaseStats.corridorClimbSpeedFac * 0.8f * Options.CorridorClimbSpeedFac.Value * Options.GlobalModifier.Value;
-            self.slugcatStats.runspeedFac = activeBaseStats.runspeedFac * 0.8f * Options.RunSpeedFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.bodyWeightFac = activeBaseStats.BodyWeightFac * 0.65f * Options.BodyWeightFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.generalVisibilityBonus = activeBaseStats.GeneralVisibilityBonus * 0.8f * Options.VisibilityBonus.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.visualStealthInSneakMode = activeBaseStats.VisualStealthInSneakMode * 1.2f * Options.VisualStealthInSneakMode.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.loudnessFac = activeBaseStats.LoudnessFac * 0.5f * Options.LoudnessFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.lungsFac = activeBaseStats.LungsFac * 0.8f * Options.LungsFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.poleClimbSpeedFac = activeBaseStats.PoleClimbSpeedFac * 0.8f * Options.PoleClimbSpeedFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.corridorClimbSpeedFac = activeBaseStats.CorridorClimbSpeedFac * 0.8f * Options.CorridorClimbSpeedFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.runspeedFac = activeBaseStats.RunspeedFac * 0.8f * Options.RunSpeedFac.Value * Options.GlobalModifier.Value;
         }
         else
         {
             // Direct assignment from value type ensures no reference issues
-            self.slugcatStats.bodyWeightFac = activeBaseStats.bodyWeightFac;
-            self.slugcatStats.generalVisibilityBonus = activeBaseStats.generalVisibilityBonus;
-            self.slugcatStats.visualStealthInSneakMode = activeBaseStats.visualStealthInSneakMode;
-            self.slugcatStats.loudnessFac = activeBaseStats.loudnessFac;
-            self.slugcatStats.lungsFac = activeBaseStats.lungsFac;
-            self.slugcatStats.poleClimbSpeedFac = activeBaseStats.poleClimbSpeedFac;
-            self.slugcatStats.corridorClimbSpeedFac = activeBaseStats.corridorClimbSpeedFac;
-            self.slugcatStats.runspeedFac = activeBaseStats.runspeedFac;
+            self.slugcatStats.bodyWeightFac = activeBaseStats.BodyWeightFac;
+            self.slugcatStats.generalVisibilityBonus = activeBaseStats.GeneralVisibilityBonus;
+            self.slugcatStats.visualStealthInSneakMode = activeBaseStats.VisualStealthInSneakMode;
+            self.slugcatStats.loudnessFac = activeBaseStats.LoudnessFac;
+            self.slugcatStats.lungsFac = activeBaseStats.LungsFac;
+            self.slugcatStats.poleClimbSpeedFac = activeBaseStats.PoleClimbSpeedFac;
+            self.slugcatStats.corridorClimbSpeedFac = activeBaseStats.CorridorClimbSpeedFac;
+            self.slugcatStats.runspeedFac = activeBaseStats.RunspeedFac;
         }
         LogStats(self, true);
     }
@@ -625,7 +625,7 @@ public partial class Pupifier
         // Scale the hands (arms) position relative to its connection
         // In original pups have long arms, which looks goofy
         // (extensively tested, 3 different setups)
-        if (self.owner.owner is not Player player || (!player.isNPC && !player.playerState.isPup)) return;
+        if (self.owner.owner is not Player player || player.isNPC || !player.playerState.isPup) return;
 
         // I don't know how to fix arms when crawling, it's not even noticable so I'm just not gonna fix it
         //if (player.bodyMode == Player.BodyModeIndex.Crawl) {};
