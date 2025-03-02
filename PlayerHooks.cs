@@ -421,7 +421,7 @@ public partial class Pupifier
 
                 Log("Adjusting tail dimensions");
             
-                float scale = slugpupEnabled ? 0.8f : 1f;
+                float scale = slugpupEnabled ? Options.TailSize.Value : 1f;
                 for (int i = 0; i < playerGraphics.tail.Length; i++)
                 {
                     if (i >= originalValues.rads.Length) break;

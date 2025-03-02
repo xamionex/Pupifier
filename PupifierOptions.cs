@@ -27,6 +27,7 @@ public partial class Pupifier
         public readonly Configurable<float> JumpPowerFac;
         public readonly Configurable<float> WallJumpPowerFac;
         public readonly Configurable<float> ActionJumpPowerFac;
+        public readonly Configurable<float> TailSize;
         public readonly Configurable<bool> DisableBeingGrabbed;
         public readonly Configurable<bool> UseBothHands;
         public readonly Configurable<bool> SpearmasterTwoHanded;
@@ -56,6 +57,7 @@ public partial class Pupifier
             JumpPowerFac = config.Bind(nameof(JumpPowerFac), 1f, new ConfigurableInfo("Factor affecting jump power.", null, "", "Jump Power"));
             WallJumpPowerFac = config.Bind(nameof(WallJumpPowerFac), 1f, new ConfigurableInfo("Factor affecting wall jump power. (Additive, i.e. you set 1.2 to be 20% better at wall jumping)", null, "", "Wall Jump Power Multiplier"));
             ActionJumpPowerFac = config.Bind(nameof(ActionJumpPowerFac), 1f, new ConfigurableInfo("Factor affecting jump power in actions like rolling, rocket jumping...", null, "", "Action Jump Power"));
+            TailSize = config.Bind(nameof(TailSize), 0.75f, new ConfigurableInfo("Factor affecting how big your tail is when switching to a pup", null, "", "Tail Size"));
 
             // Toggles tab
             LoggingPupEnabled = config.Bind(nameof(LoggingPupEnabled), true, new ConfigurableInfo("If enabled, console will log pup changes", null, "", "Enable logging for pup change"));
@@ -131,6 +133,7 @@ public partial class Pupifier
                 AddFloatSlider(JumpPowerFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softBlue, softBlue, softBlue);
                 AddFloatSlider(WallJumpPowerFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softBlue, softBlue, softBlue);
                 AddFloatSlider(ActionJumpPowerFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softBlue, softBlue, softBlue);
+                AddFloatSlider(TailSize, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softBlue, softBlue, softBlue);
 
                 /**************** Toggles ****************/
                 CurTab++;
