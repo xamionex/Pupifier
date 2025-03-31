@@ -36,13 +36,14 @@ This mod was made specifically for meadow but works for non-meadow as well
 - amione - Creator
 - youbitchoc - For helping in development
 - henpemaz - For Rain Meadow
+- phanie - For the art
 - Maxi Mol - For Mouse Drag code
 - LDani, simichan1227 - For testing the s**t out of my mod (It was kinda encouraging)
 
 [hr][/hr]
 [h3]Report Issues on github please! https://github.com/xamionex/Pupifier/issues/new[/h3]
     </ProductDescription>
-    <ModVersion>2.0.9</ModVersion>
+    <ModVersion>2.1.0</ModVersion>
     <Version>2.0.8</Version>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>

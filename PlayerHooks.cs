@@ -24,7 +24,7 @@ public partial class Pupifier
         On.Player.setPupStatus += Player_SetPupStatus;
 
         // Fix saint head
-        On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
+        //FIXME: On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
 
         // TODO: Make an onhook instead
         //IL.SlugcatStats.SlugcatFoodMeter += Player_AppendPupCheck;
@@ -55,7 +55,7 @@ public partial class Pupifier
         // Add so we get correct hand positions
         IL.SlugcatHand.Update += Player_AppendPupCheck;
         // Fix original slugpup animations
-        On.SlugcatHand.Update += Player_SlugcatHandUpdate;
+        //FIXME: On.SlugcatHand.Update += Player_SlugcatHandUpdate;
 
         // Allows grabbing other players
         IL.Player.Grabability += Player_AppendPupCheckGrabability;
@@ -437,7 +437,7 @@ public partial class Pupifier
         }
     }
 
-    private void PlayerGraphics_DrawSprites(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+    /*private void PlayerGraphics_DrawSprites(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
     {
         // Call the original DrawSprites method to handle all default rendering
         orig(self, sLeaser, rCam, timeStacker, camPos);
@@ -454,7 +454,7 @@ public partial class Pupifier
         {
             LogError(ex, "Error in PlayerGraphics_DrawSprites");
         }
-    }
+    }*/
 
     public bool slugpupEnabled = false;
     bool _localPlayer = false;
@@ -469,7 +469,7 @@ public partial class Pupifier
         if (self.isNPC || slugpupEnabled == self.playerState.isPup) return;
         
         float newMass = (0.7f + (slugpupEnabled ? 0.05f : 0f) * self.slugcatStats.bodyWeightFac +
-                         (self.bool1 && slugpupEnabled ? 0.18f : 0f) * Options.SizeModifier.Value) / 2f;
+                         (slugpupEnabled ? 0.18f : 0f) * Options.SizeModifier.Value) / 2f;
         Log($"ManualPupChange: Changing mass to {newMass}, reducing tail size and trying to reduce connection distance");
         
         // Manual body size (mass)
@@ -617,7 +617,7 @@ public partial class Pupifier
         Log($"runspeedFac: {self.slugcatStats.runspeedFac}");
     }
 
-    private void Player_SlugcatHandUpdate(On.SlugcatHand.orig_Update orig, SlugcatHand self)
+    /*private void Player_SlugcatHandUpdate(On.SlugcatHand.orig_Update orig, SlugcatHand self)
     {
         // Call the original method to keep the original behavior
         orig(self);
@@ -647,5 +647,5 @@ public partial class Pupifier
             // probably doesn't fix crawling arms being too long, but im gonna keep it since it doesnt break anything
             self.relativeHuntPos *= 0.5f;
         }
-    }
+    }*/
 }
