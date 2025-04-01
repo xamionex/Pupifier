@@ -30,12 +30,14 @@ public partial class Pupifier
         // TODO: Make an onhook instead
         //IL.SlugcatStats.SlugcatFoodMeter += Player_AppendPupCheck;
 
+        // ReSharper disable twice UnusedVariable
+
         // we set isSlugpup, RenderAsPup to playerstate
-        new Hook(typeof(Player).GetProperty("isSlugpup").GetGetMethod(), (Func<Player, bool> orig, Player self) => orig(self) || (!self.isNPC && self.playerState.isPup));
+        var isSlugpupHook = new Hook(typeof(Player).GetProperty("isSlugpup")?.GetGetMethod(), (Func<Player, bool> orig, Player self) => orig(self) || (!self.isNPC && self.playerState.isPup));
         //new Hook(typeof(PlayerGraphics).GetProperty("RenderAsPup").GetGetMethod(), (Func<PlayerGraphics, bool> orig, PlayerGraphics self) => orig(self) || (!self.player.isNPC && self.player.playerState.isPup));
 
         // patch because it checks isSlugpup and tries getting npcStats
-        new Hook(typeof(Player).GetProperty("slugcatStats").GetGetMethod(), (Func<Player, SlugcatStats> orig, Player self) => (self.isSlugpup && !self.isNPC) ? self.abstractCreature.world.game.session.characterStats : orig(self));
+        var antiIsSlugpupHook = new Hook(typeof(Player).GetProperty("slugcatStats")?.GetGetMethod(), (Func<Player, SlugcatStats> orig, Player self) => self is { isSlugpup: true, isNPC: false } ? self.abstractCreature.world.game.session.characterStats : orig(self));
 
         // Change isSlugpup in specific methods
         // In jump if isSlugpup is true, it breaks jumping off pipes, disables for players by adding isNPC
@@ -50,7 +52,7 @@ public partial class Pupifier
         // To have persistent body size
         On.Player.MovementUpdate += Player_MovementUpdate;
         
-        // False in SlugcatGrab if we have using both arms enabled or if were spearmaster and we want to pick up a spear
+        // False in SlugcatGrab if we have using both arms enabled or if were spearmaster, and we want to pick up a spear
         IL.Player.SlugcatGrab += Player_SlugcatGrabAppendToIsSlugpupCheck;
 
         // Add so we get correct hand positions
@@ -128,7 +130,7 @@ public partial class Pupifier
             }
             // confirms slugpups are works of the devil
             num4 = Mathf.Ceil(num4 * 0.666f);
-            if (!origwhiplashJump && originput0.x != -origrollDirection)
+            if (!origwhiplashJump && !Mathf.Approximately(originput0.x, -origrollDirection))
             {
                 float num5 = 8.5f;
                 if (self.isRivulet)
@@ -145,19 +147,20 @@ public partial class Pupifier
                 return;
             }
         }
+
         if (self.bodyMode != Player.BodyModeIndex.CorridorClimb &&
             self.animation != Player.AnimationIndex.ClimbOnBeam &&
             self.animation != Player.AnimationIndex.BellySlide &&
             !(self.animation == Player.AnimationIndex.ZeroGSwim || self.animation == Player.AnimationIndex.ZeroGPoleGrab) &&
             !(self.animation == Player.AnimationIndex.DownOnFours &&
-            self.bodyChunks[1].ContactPoint.y < 0 &&
-            self.input[0].downDiagonal == self.flipDirection))
+              self.bodyChunks[1].ContactPoint.y < 0 &&
+              self.input[0].downDiagonal == self.flipDirection))
         {
             float additionalModifier;
-            int num9 = self.input[0].x;
+            //int num9 = self.input[0].x;
             if (self.standing)
             {
-                if (origslideCounter > 0 && origslideCounter < 10)
+                /*if (origslideCounter is > 0 and < 10)
                 {
                     // self.jumpBoost = 5f;
                     // if (self.isRivulet)
@@ -176,7 +179,10 @@ public partial class Pupifier
                 {
                     // originally 7
                     additionalModifier = 0.375f;
-                }
+                }*/
+
+                // The above if statement minimalized to this
+                additionalModifier = origslideCounter is > 0 and < 10 ? 0.1f : 0.375f;
             }
             else
             {
@@ -203,8 +209,8 @@ public partial class Pupifier
                     //{
                     //    num10 = 5.5f;
                     //}
-                    num9 = (origbodyChunks0.pos.x > origbodyChunks1.pos.x) ? 1 : (-1);
-                    if (num9 != 0 && origbodyChunks0.pos.x > origbodyChunks1.pos.x == num9 > 0)
+                    var num9 = origbodyChunks0.pos.x > origbodyChunks1.pos.x ? 1 : -1;
+                    if (origbodyChunks0.pos.x > origbodyChunks1.pos.x == num9 > 0)
                     {
                         // should modify only superjump/rocketjump
                         self.bodyChunks[0].vel.x *= 0.611f * actionJumpMultiplier;
@@ -258,7 +264,7 @@ public partial class Pupifier
         }
     }
 
-    public bool Player_CheckGrabability(Player player)
+    private bool Player_CheckGrabability(Player player)
     {
         if (IsModEnabled("henpemaz.rainmeadow")) return PupifierMeadowCompat.Player_CheckGrababilityMeadow(player);
         return !Options.DisableBeingGrabbed.Value;
@@ -362,6 +368,7 @@ public partial class Pupifier
         }
     }
     
+    // ReSharper disable once UnusedMember.Local
     private void Player_AppendPupCheckGraphics(ILContext il)
     {
         //351	0328	isinst	Player
@@ -372,8 +379,8 @@ public partial class Pupifier
         try
         {
             // 1 2 3
-            var MatchIteration = 0;
-            var MatchList = new List<int>() {0,1,2};
+            var matchIteration = 0;
+            var matchList = new List<int> {0,1,2};
             var c = new ILCursor(il);
             // Match the IL sequence for `SlugCatClass == Slugpup`
             while (c.TryGotoNext(MoveType.AfterLabel,
@@ -382,13 +389,13 @@ public partial class Pupifier
                        i => i.MatchCall(typeof(ExtEnum<SlugcatStats.Name>).GetMethod("op_Equality")) // Call ExtEnum op_Equality
                    ))
             {
-                if (!MatchList.Contains(MatchIteration))
+                if (!matchList.Contains(matchIteration))
                 {
                     c.Emit(OpCodes.Dup); // Duplicate Player
                     c.Index += 3; // Move to delegate
                     c.EmitDelegate((Player player, bool isSlugpup) => isSlugpup || (!player.isNPC && player.playerState.isPup));
                 }
-                MatchIteration++;
+                matchIteration++;
             }
         }
         catch (Exception ex)
@@ -459,8 +466,8 @@ public partial class Pupifier
         }
     }
 
-    public bool slugpupEnabled = false;
-    bool _localPlayer = false;
+    public bool slugpupEnabled;
+    bool _localPlayer;
     private void Player_Update(On.Player.orig_Update orig, Player self, bool eu)
     {
         Player_ChangeMode(self);
@@ -482,7 +489,7 @@ public partial class Pupifier
         self.bodyChunks[0].mass = newMass;
         self.bodyChunks[1].mass = newMass;
         
-        // I would love to make this work but it'll take some time to find what is overriding this when we assign it
+        // I would love to make this work, but it'll take some time to find what is overriding this when we assign it
         // distance 17f normal, 12f slugpup
         //self.bodyChunkConnections = new []{new PhysicalObject.BodyChunkConnection(self.bodyChunks[0], self.bodyChunks[1], slugpupEnabled ? 12f : 17f, PhysicalObject.BodyChunkConnection.Type.Normal, 1f, 0.5f)};
         self.bodyChunkConnections[0].distance = slugpupEnabled ? 12f : 17f;
@@ -575,8 +582,8 @@ public partial class Pupifier
         if (IsModEnabled("henpemaz.rainmeadow"))
         {
             if (PupifierMeadowCompat.GameIsMeadow()) PupifierMeadowCompat.ToggleGrabbable(self);
-        };
-        
+        }
+
         // Set relative stats on status
         if (!Options.UseSlugpupStatsToggle.Value) return;
         LogStats(self, false);
