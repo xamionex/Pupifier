@@ -623,14 +623,13 @@ public partial class Pupifier
     private void Player_SlugcatHandUpdate(On.SlugcatHand.orig_Update orig, SlugcatHand self)
     {
         orig(self);
-
+        
         // Get first owner (protected field) via Traverse
-        var limb = Traverse.Create(self).Field("owner").GetValue<object>();
+        var limb = Traverse.Create(self).Field("owner").GetValue<GraphicsModule>();
         if (limb == null) return;
 
         // Get final owner (Player) from the limb object
-        var player = Traverse.Create(limb).Field("owner").GetValue<Player>();
-        if (player == null || player.isNPC || !player.playerState.isPup) return;
+        if (limb.owner is not Player player || player.isNPC || !player.playerState.isPup) return;
 
         try 
         {

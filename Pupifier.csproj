@@ -43,7 +43,7 @@ This mod was made specifically for meadow but works for non-meadow as well
 [hr][/hr]
 [h3]Report Issues on github please! https://github.com/xamionex/Pupifier/issues/new[/h3]
     </ProductDescription>
-    <ModVersion>2.1.1</ModVersion>
+    <ModVersion>2.1.2</ModVersion>
     <Version>2.0.8</Version>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
