@@ -6,6 +6,7 @@ using MonoMod.RuntimeDetour;
 using MoreSlugcats;
 using System.Collections.Generic;
 using System.Linq;
+using HarmonyLib;
 using RWCustom;
 
 namespace Pupifier;
@@ -24,7 +25,7 @@ public partial class Pupifier
         On.Player.setPupStatus += Player_SetPupStatus;
 
         // Fix saint head
-        //FIXME: On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
+        On.PlayerGraphics.DrawSprites += PlayerGraphics_DrawSprites;
 
         // TODO: Make an onhook instead
         //IL.SlugcatStats.SlugcatFoodMeter += Player_AppendPupCheck;
@@ -55,7 +56,7 @@ public partial class Pupifier
         // Add so we get correct hand positions
         IL.SlugcatHand.Update += Player_AppendPupCheck;
         // Fix original slugpup animations
-        //FIXME: On.SlugcatHand.Update += Player_SlugcatHandUpdate;
+        On.SlugcatHand.Update += Player_SlugcatHandUpdate;
 
         // Allows grabbing other players
         IL.Player.Grabability += Player_AppendPupCheckGrabability;
@@ -437,15 +438,17 @@ public partial class Pupifier
         }
     }
 
-    /*private void PlayerGraphics_DrawSprites(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
+    private void PlayerGraphics_DrawSprites(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
     {
-        // Call the original DrawSprites method to handle all default rendering
         orig(self, sLeaser, rCam, timeStacker, camPos);
-        if (self.player.isNPC || !self.player.playerState.isPup) return;
+    
+        // Access the private 'player' field using Harmony's Traverse
+        var player = Traverse.Create(self).Field("player").GetValue<Player>();
+        if (player == null || player.isNPC || !player.playerState.isPup) return;
 
         try
         {
-            if (self.player.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Saint)
+            if (player.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Saint)
             {
                 sLeaser.sprites[3].element = Futile.atlasManager.GetElementWithName($"HeadB0");
             }
@@ -454,7 +457,7 @@ public partial class Pupifier
         {
             LogError(ex, "Error in PlayerGraphics_DrawSprites");
         }
-    }*/
+    }
 
     public bool slugpupEnabled = false;
     bool _localPlayer = false;
@@ -617,35 +620,37 @@ public partial class Pupifier
         Log($"runspeedFac: {self.slugcatStats.runspeedFac}");
     }
 
-    /*private void Player_SlugcatHandUpdate(On.SlugcatHand.orig_Update orig, SlugcatHand self)
+    private void Player_SlugcatHandUpdate(On.SlugcatHand.orig_Update orig, SlugcatHand self)
     {
-        // Call the original method to keep the original behavior
         orig(self);
 
-        // Scale the hands (arms) position relative to its connection
-        // In original pups have long arms, which looks goofy
-        // (extensively tested, 3 different setups)
-        if (self.owner.owner is not Player player || player.isNPC || !player.playerState.isPup) return;
+        // Get first owner (protected field) via Traverse
+        var limb = Traverse.Create(self).Field("owner").GetValue<object>();
+        if (limb == null) return;
 
-        // I don't know how to fix arms when crawling, it's not even noticable so I'm just not gonna fix it
-        //if (player.bodyMode == Player.BodyModeIndex.Crawl) {};
+        // Get final owner (Player) from the limb object
+        var player = Traverse.Create(limb).Field("owner").GetValue<Player>();
+        if (player == null || player.isNPC || !player.playerState.isPup) return;
 
-        if (player.animation == Player.AnimationIndex.HangUnderVerticalBeam)
+        try 
         {
-            // Fixes arms when hanging from vertical pipes
-            Vector2 offset = self.absoluteHuntPos - self.owner.owner.bodyChunks[0].pos;
-            self.absoluteHuntPos = self.owner.owner.bodyChunks[0].pos + offset * 0.5f;
-        }
+            if (player.animation == Player.AnimationIndex.HangUnderVerticalBeam)
+            {
+                // Use the retrieved player reference
+                Vector2 offset = self.absoluteHuntPos - player.bodyChunks[0].pos;
+                self.absoluteHuntPos = player.bodyChunks[0].pos + offset * 0.5f;
+            }
 
-        if (player.animation == Player.AnimationIndex.HangUnderVerticalBeam ||
-            player.animation == Player.AnimationIndex.StandOnBeam ||
-            player.animation == Player.AnimationIndex.BeamTip
-        )
-        {
-            // Works for standing on pipes (balancing) (that includes: standing on horizontal pipes, beam tips)
-            // also required for the above fix (hanging)
-            // probably doesn't fix crawling arms being too long, but im gonna keep it since it doesnt break anything
-            self.relativeHuntPos *= 0.5f;
+            if (player.animation == Player.AnimationIndex.HangUnderVerticalBeam ||
+                player.animation == Player.AnimationIndex.StandOnBeam ||
+                player.animation == Player.AnimationIndex.BeamTip)
+            {
+                self.relativeHuntPos *= 0.5f;
+            }
         }
-    }*/
+        catch (Exception ex)
+        {
+            LogError(ex, "Error in Player_SlugcatHandUpdate");
+        }
+    }
 }

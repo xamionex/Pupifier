@@ -41,7 +41,7 @@ public partial class Pupifier
             // Pupifier tab
             SlugpupKey = config.Bind(nameof(SlugpupKey), KeyCode.Minus, new ConfigurableInfo("Key to toggle pup mode.", null, "", "Keybind for toggling between pup mode"));
             UseSecondaryKeyToggle = config.Bind(nameof(UseSecondaryKeyToggle), true, new ConfigurableInfo("If true, the secondary key will be used to toggle pup mode.", null, "", "Use Secondary Key to Toggle Pup Mode"));
-            SlugpupSecondaryKey = config.Bind(nameof(SlugpupSecondaryKey), KeyCode.JoystickButton3, new ConfigurableInfo("Secondary Key to toggle pup mode, useful for controllers.", null, "", "Secondary Keybind for toggling between pup mode, useful for controllers"));
+            SlugpupSecondaryKey = config.Bind(nameof(SlugpupSecondaryKey), KeyCode.JoystickButton9, new ConfigurableInfo("Secondary Key to toggle pup mode, useful for controllers.", null, "", "Secondary Keybind for toggling between pup mode, useful for controllers"));
 
             // Stats tab
             UseSlugpupStatsToggle = config.Bind(nameof(UseSlugpupStatsToggle), true, new ConfigurableInfo("If true, stats will be changed to a slugpup's equivalent.", null, "", "Use Relative Slugpup Stats"));
