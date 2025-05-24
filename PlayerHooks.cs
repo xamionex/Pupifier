@@ -526,6 +526,7 @@ public partial class Pupifier
 
     private readonly struct SlugBaseStats
     {
+        public readonly string name;
         public readonly float BodyWeightFac;
         public readonly float GeneralVisibilityBonus;
         public readonly float VisualStealthInSneakMode;
@@ -537,6 +538,7 @@ public partial class Pupifier
 
         public SlugBaseStats(SlugcatStats stats)
         {
+            name = stats.name.value;
             BodyWeightFac = stats.bodyWeightFac;
             GeneralVisibilityBonus = stats.generalVisibilityBonus;
             VisualStealthInSneakMode = stats.visualStealthInSneakMode;
@@ -586,9 +588,10 @@ public partial class Pupifier
 
         // Set relative stats on status
         if (!Options.UseSlugpupStatsToggle.Value) return;
-        LogStats(self, false);
+        LogStats(self, "pre-change");
         if (slugpupEnabled)
         {
+            self.slugcatStats.name.value = activeBaseStats.name;
             self.slugcatStats.bodyWeightFac = activeBaseStats.BodyWeightFac * 0.65f * Options.BodyWeightFac.Value * Options.GlobalModifier.Value;
             self.slugcatStats.generalVisibilityBonus = activeBaseStats.GeneralVisibilityBonus * 0.8f * Options.VisibilityBonus.Value * Options.GlobalModifier.Value;
             self.slugcatStats.visualStealthInSneakMode = activeBaseStats.VisualStealthInSneakMode * 1.2f * Options.VisualStealthInSneakMode.Value * Options.GlobalModifier.Value;
@@ -601,6 +604,7 @@ public partial class Pupifier
         else
         {
             // Direct assignment from value type ensures no reference issues
+            self.slugcatStats.name.value = activeBaseStats.name;
             self.slugcatStats.bodyWeightFac = activeBaseStats.BodyWeightFac;
             self.slugcatStats.generalVisibilityBonus = activeBaseStats.GeneralVisibilityBonus;
             self.slugcatStats.visualStealthInSneakMode = activeBaseStats.VisualStealthInSneakMode;
@@ -610,13 +614,15 @@ public partial class Pupifier
             self.slugcatStats.corridorClimbSpeedFac = activeBaseStats.CorridorClimbSpeedFac;
             self.slugcatStats.runspeedFac = activeBaseStats.RunspeedFac;
         }
-        LogStats(self, true);
+        LogStats(self, "post-change");
     }
 
-    private void LogStats(Player self, bool prepost)
+    private void LogStats(Player self, string prepost)
     {
         if (!Options.LoggingStatusEnabled.Value) return;
-        Log($"Stats {(prepost ? "post" : "pre")}-change");
+        Log($"---------------------------------------------------");
+        Log($"Stats {prepost}");
+		Log($"Class Name: {self.slugcatStats.name.value}");
         Log($"bodyWeightFac: {self.slugcatStats.bodyWeightFac}");
         Log($"generalVisibilityBonus: {self.slugcatStats.generalVisibilityBonus}");
         Log($"visualStealthInSneakMode: {self.slugcatStats.visualStealthInSneakMode}");
@@ -625,6 +631,7 @@ public partial class Pupifier
         Log($"poleClimbSpeedFac: {self.slugcatStats.poleClimbSpeedFac}");
         Log($"corridorClimbSpeedFac: {self.slugcatStats.corridorClimbSpeedFac}");
         Log($"runspeedFac: {self.slugcatStats.runspeedFac}");
+        Log($"---------------------------------------------------");
     }
 
     private void Player_SlugcatHandUpdate(On.SlugcatHand.orig_Update orig, SlugcatHand self)
