@@ -497,7 +497,7 @@ public partial class Pupifier
 
     private void Player_ChangeMode(Player self)
     {
-        if (self.isNPC || slugpupEnabled == self.playerState.isPup) return;
+        if (self.isNPC || slugpupEnabled == self.playerState.isPup || self.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Slugpup && !Options.EnableWhenSlugpupClass.Value) return;
         if (IsModEnabled("henpemaz.rainmeadow"))
         {
             _localPlayer = PupifierMeadowCompat.PlayerIsLocal(self);

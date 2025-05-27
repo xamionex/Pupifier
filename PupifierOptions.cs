@@ -35,6 +35,7 @@ public partial class Pupifier
         public readonly Configurable<bool> LoggingPupEnabled;
         public readonly Configurable<bool> LoggingStatusEnabled;
         public readonly Configurable<bool> EnableInMeadowGamemode;
+        public readonly Configurable<bool> EnableWhenSlugpupClass;
 
         public PupifierOptions()
         {
@@ -71,6 +72,7 @@ public partial class Pupifier
             ModAutoDisabledToggle = config.Bind(nameof(ModAutoDisabledToggle), false, new ConfigurableInfo("If true, Pupifier will not disable itself when other mods are found. This requires a restart", null, "", "Allow Incompatible Mods (Requires Restart)"));
             ManualPupChange = config.Bind(nameof(ManualPupChange), false, new ConfigurableInfo("If enabled, the base game method for changing pup status won't be used and instead mine will, probably doesn't work well", null, "", "Manual Pup Change, required for body size"));
             SizeModifier = config.Bind(nameof(SizeModifier), 1f, new ConfigurableInfo("Factor affecting body size. (Only with manual pup toggle, probably doesn't work)", null, "", "Body Size"));
+            EnableWhenSlugpupClass = config.Bind(nameof(EnableWhenSlugpupClass), false, new ConfigurableInfo("By default the mod doesn't modify slugpup (the class), like the one you can select in Meadow, this is for compatibility sake for some mods like DMS", null, "", "Enable modifying slugpup class (Read Desc)"));
         }
 
         public override void Initialize()
@@ -159,6 +161,7 @@ public partial class Pupifier
                 AddFloatSlider(SizeModifier, new Vector2(20f, y -= sepr + 10f), 0.01f, 5f, 400, softRed, softRed, softRed);
                 AddText("Note: Size modifier will change your hitbox, and not visually, if you want a good experience do +/- 0.30", new Vector2(x, y -= sepr), softRed);
                 AddText("I kept this unrestricted because I know some of you want to screw around :p", new Vector2(x, y -= sepr), softRed);
+                AddCheckbox(EnableWhenSlugpupClass, new Vector2(x, y -= sepr), softRed, softRed, softRed);
 
                 Log("Added all options...");
             }
