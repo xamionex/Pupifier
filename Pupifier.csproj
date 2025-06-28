@@ -43,7 +43,7 @@ This mod was made specifically for meadow but works for non-meadow as well
 [hr][/hr]
 [h3]Report Issues on github please! https://github.com/xamionex/Pupifier/issues/new[/h3]
     </ProductDescription>
-    <ModVersion>2.1.5</ModVersion>
+    <ModVersion>2.1.6</ModVersion>
     <Version>2.0.8</Version>
     <LangVersion>10.0</LangVersion>
     <Nullable>enable</Nullable>
@@ -153,5 +153,41 @@ This mod was made specifically for meadow but works for non-meadow as well
   <Target Name="ZipProjectDirectory" AfterTargets="Build">
     <Exec Command="zip -r $(RootNamespace).zip $(RootNamespace)/*" Condition="'$(OS)' == 'Unix'" />
     <Exec Command="powershell -Command &quot;Compress-Archive -Path '$(ProjectDir)$(RootNamespace)' -DestinationPath '$(ProjectDir)$(RootNamespace).zip' -Force&quot;" Condition="'$(OS)' == 'Windows_NT'" />
+  </Target>
+
+  <Target Name="PostBuildCopyToGameFolder" AfterTargets="Build">
+    <PropertyGroup>
+      <GameLocationFile>$(MSBuildProjectDirectory)/.gamelocation</GameLocationFile>
+      <PupifierSource>$(MSBuildProjectDirectory)/Pupifier</PupifierSource>
+    </PropertyGroup>
+
+    <!-- Read .gamelocation file if exists -->
+    <ReadLinesFromFile File="$(GameLocationFile)" Condition="Exists('$(GameLocationFile)')">
+      <Output TaskParameter="Lines" ItemName="_GameLocationLines"/>
+    </ReadLinesFromFile>
+
+    <!-- Extract first non-empty line as path -->
+    <PropertyGroup>
+      <RainWorldPath Condition="'@(_GameLocationLines)' != ''">$([System.Text.RegularExpressions.Regex]::Match(%(_GameLocationLines.Identity), `^\s*(.+?)\s*$`).Groups[1].Value)</RainWorldPath>
+    </PropertyGroup>
+
+    <!-- Warning if no valid path found -->
+    <Warning Condition="'$(RainWorldPath)' == ''" Text="Skipping game folder copy: .gamelocation file not found or empty" />
+
+    <!-- 🪟 Windows -->
+    <Exec Condition="'$(OS)' == 'Windows_NT' And '$(RainWorldPath)' != ''" Command='
+    setlocal EnableDelayedExpansion &amp;&amp;
+    set "TargetPath=$(RainWorldPath)\RainWorld_Data\StreamingAssets\mods\pupifier" &amp;&amp;
+    if exist "!TargetPath!" rmdir /s /q "!TargetPath!" &amp;&amp;
+    xcopy /s /e /y "$(PupifierSource)" "!TargetPath!"
+  '/>
+
+    <!-- 🐧 Linux/macOS -->
+    <Exec Condition="'$(OS)' != 'Windows_NT' And '$(RainWorldPath)' != ''" Command='
+    TargetPath="$(RainWorldPath)/RainWorld_Data/StreamingAssets/mods/pupifier" &amp;&amp;
+    rm -rf "$TargetPath" &amp;&amp;
+    mkdir -p "$TargetPath" &amp;&amp;
+    cp -r "$(PupifierSource)/." "$TargetPath"
+  '/>
   </Target>
 </Project>

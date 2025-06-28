@@ -27,9 +27,9 @@ public static class MeadowPlayerControllerPatches
         // callvirt // PlayerState.isPup
         // ldc.i4.0 // False
         var codes = new List<CodeInstruction>(instructions);
-        FieldInfo isPupField = AccessTools.Field(typeof(PlayerState), nameof(PlayerState.isPup));
+        var isPupField = AccessTools.Field(typeof(PlayerState), nameof(PlayerState.isPup));
 
-        for (int i = 0; i < codes.Count; i++)
+        for (var i = 0; i < codes.Count; i++)
         {
             // Check if the current instruction is storing to PlayerState.isPup
             if (codes[i].opcode == OpCodes.Stfld && codes[i].operand as FieldInfo == isPupField)
@@ -75,7 +75,7 @@ public class PlayerData : OnlineResource.ResourceData
 
         public override void ReadTo(OnlineResource.ResourceData data, OnlineResource resource)
         {
-            PlayerData playerData = (PlayerData)data;
+            var playerData = (PlayerData)data;
             playerData.Ungrabbables = _ungrabbables.list.Select(i => OnlineManager.lobby.PlayerFromId(i)).Where(p => p != null).ToList();
         }
     }
@@ -99,7 +99,7 @@ public class PupifierMeadowCompat
     public static bool Player_CheckGrababilityMeadow(Player player)
     {
         Initialize();
-        OnlinePlayer onlinePlayer = player.abstractPhysicalObject.GetOnlineObject().owner;
+        var onlinePlayer = player.abstractPhysicalObject.GetOnlineObject().owner;
         if (PlayerData.Ungrabbables.Contains(onlinePlayer)) return false;
         return true;
     }
@@ -130,7 +130,7 @@ public class PupifierMeadowCompat
     public static void ToggleGrabbable(Player player)
     {
         Initialize();
-        OnlinePlayer onlinePlayer = player.abstractPhysicalObject.GetOnlineObject().owner;
+        var onlinePlayer = player.abstractPhysicalObject.GetOnlineObject().owner;
         if (Pupifier.Options.DisableBeingGrabbed.Value)
         {
             if (PlayerData.Ungrabbables.Contains(onlinePlayer)) return;

@@ -8,7 +8,7 @@ public partial class Pupifier
 {
     public class PupifierOptions : OptionInterface
     {
-        public int CurTab;
+        private int _curTab;
         public readonly Configurable<KeyCode> SlugpupKey;
         public readonly Configurable<bool> UseSecondaryKeyToggle;
         public readonly Configurable<KeyCode> SlugpupSecondaryKey;
@@ -28,6 +28,8 @@ public partial class Pupifier
         public readonly Configurable<float> WallJumpPowerFac;
         public readonly Configurable<float> ActionJumpPowerFac;
         public readonly Configurable<float> TailSize;
+        public readonly Configurable<int> PupFoodPips;
+        public readonly Configurable<int> PupHibernationFoodPips;
         public readonly Configurable<bool> DisableBeingGrabbed;
         public readonly Configurable<bool> UseBothHands;
         public readonly Configurable<bool> SpearmasterTwoHanded;
@@ -36,6 +38,14 @@ public partial class Pupifier
         public readonly Configurable<bool> LoggingStatusEnabled;
         public readonly Configurable<bool> EnableInMeadowGamemode;
         public readonly Configurable<bool> EnableWhenSlugpupClass;
+        public readonly Configurable<bool> ChangeFoodPips;
+        public readonly Configurable<bool> ChangeFoodPipsPercentage;
+        public readonly Configurable<bool> ChangeFoodPipsPercentageIgnoreDenominator;
+        public readonly Configurable<bool> ChangeFoodPipsSubtraction;
+        public readonly Configurable<bool> ChangeThrowingSkill;
+        public readonly Configurable<int> throwingSkill;
+        public readonly Configurable<bool> AddStaticDamage;
+        public readonly Configurable<float> StaticDamage;
 
         public PupifierOptions()
         {
@@ -59,7 +69,21 @@ public partial class Pupifier
             WallJumpPowerFac = config.Bind(nameof(WallJumpPowerFac), 1f, new ConfigurableInfo("Factor affecting wall jump power. (Additive, i.e. you set 1.2 to be 20% better at wall jumping)", null, "", "Wall Jump Power Multiplier"));
             ActionJumpPowerFac = config.Bind(nameof(ActionJumpPowerFac), 1f, new ConfigurableInfo("Factor affecting jump power in actions like rolling, rocket jumping...", null, "", "Action Jump Power"));
             TailSize = config.Bind(nameof(TailSize), 0.75f, new ConfigurableInfo("Factor affecting how big your tail is when switching to a pup", null, "", "Tail Size"));
-
+            
+            // Damage tab
+            ChangeThrowingSkill = config.Bind(nameof(ChangeThrowingSkill), false, new ConfigurableInfo("If true, damage will be modified.", null, "", "Change throwing skill (Damage)"));
+            throwingSkill = config.Bind(nameof(throwingSkill), 1, new ConfigurableInfo("Factor affecting how much damage you deal", null, "", "Throwing Skill (Damage)"));
+            AddStaticDamage = config.Bind(nameof(AddStaticDamage), false, new ConfigurableInfo("If true, will multiply your damage by this amount.", null, "", "Multiply Damage (recommended)"));
+            StaticDamage = config.Bind(nameof(StaticDamage), 1f, new ConfigurableInfo("Factor affecting how much damage you deal", null, "", "Damage"));
+            
+            // FoodPips tab
+            ChangeFoodPips = config.Bind(nameof(ChangeFoodPips), false, new ConfigurableInfo("If enabled, you will use the below set food pips requirement", null, "", "Enable food pips change"));
+            ChangeFoodPipsPercentage = config.Bind(nameof(ChangeFoodPipsPercentage), true, new ConfigurableInfo("If enabled, this will make the mod multiply by the value you set, like a percentage", null, "", "Change with percentage of original"));
+            ChangeFoodPipsPercentageIgnoreDenominator = config.Bind(nameof(ChangeFoodPipsPercentageIgnoreDenominator), false, new ConfigurableInfo("If enabled, this will make percentage ignore the denominator aka 1.6 -> 1 regardless of what the denominator is", null, "", "Percentage Ignore Denominator (Disable Rounding)"));
+            ChangeFoodPipsSubtraction = config.Bind(nameof(ChangeFoodPipsSubtraction), false, new ConfigurableInfo("If enabled, this will make the mod subtract by the value you set", null, "", "Change with subtraction"));
+            PupFoodPips = config.Bind(nameof(PupFoodPips), 6, new ConfigurableInfo("How many pips can you have (maximum)", null, "", "Maximum Food Pips"));
+            PupHibernationFoodPips = config.Bind(nameof(PupHibernationFoodPips), 6, new ConfigurableInfo("How many pips should you need to sleep", null, "", "Food Pips Required"));
+            
             // Toggles tab
             LoggingPupEnabled = config.Bind(nameof(LoggingPupEnabled), true, new ConfigurableInfo("If enabled, console will log pup changes", null, "", "Enable logging for pup change"));
             LoggingStatusEnabled = config.Bind(nameof(LoggingStatusEnabled), false, new ConfigurableInfo("If enabled, console will log stats upon changes", null, "", "Enable logging for stats when changing"));
@@ -77,6 +101,7 @@ public partial class Pupifier
 
         public override void Initialize()
         {
+            // ReSharper disable RedundantAssignment
             try
             {
                 base.Initialize();
@@ -90,14 +115,14 @@ public partial class Pupifier
                 Color softCyan = new(0f, 0.7f, 0.7f);
                 Color softGray = new(0.7f, 0.7f, 0.7f);
 
-                Tabs = new OpTab[] { new(this, "Pupifier"), new(this, "Stats"), new(this, "Toggles"), new(this, "Experimental") };
+                Tabs = new OpTab[] { new(this, "Pupifier"), new(this, "Stats"), new(this, "Damage"), new(this, "Food Pips"), new(this, "Toggles"), new(this, "Experimental") };
 
                 /**************** Pupifier ****************/
-                CurTab = 0;
+                _curTab = 0;
                 AddTitle();
-                float x = 80f;
-                float y = 540f;
-                float sepr = 30f;
+                var x = 80f;
+                var y = 540f;
+                var sepr = 30f;
 
                 if (BepInEx.Bootstrap.Chainloader.PluginInfos.ContainsKey("elumenix.pupify"))
                 {
@@ -113,7 +138,7 @@ public partial class Pupifier
                 AddKeyBinder(SlugpupSecondaryKey, new Vector2(x, y -= sepr + 6f), softYellow, softYellow);
 
                 /**************** Stats ****************/
-                CurTab++;
+                _curTab++;
                 AddTitle();
                 x = 150f;
                 y = 540f;
@@ -137,8 +162,45 @@ public partial class Pupifier
                 AddFloatSlider(ActionJumpPowerFac, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softBlue, softBlue, softBlue);
                 AddFloatSlider(TailSize, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softBlue, softBlue, softBlue);
 
+                /**************** ThrowingSkill ****************/
+                _curTab++;
+                AddTitle();
+                x = 150f;
+                y = 540f;
+                sepr = 30f;
+                AddCheckbox(ChangeThrowingSkill, new Vector2(x, y -= sepr), softMagenta, softMagenta, softMagenta);
+                AddText("0 = Weak throw, low damage, reduced speed", new Vector2(x, y -= sepr), softMagenta);
+                AddText("1 = Standard throw, upward throw slightly nerfed (if enabled)", new Vector2(x, y -= sepr), softMagenta);
+                AddText("2 = Strong throw, 1.25x damage, faster speed", new Vector2(x, y -= sepr), softMagenta);
+                AddText("   Gourmand (if 2 or higher): 3x damage, special animations, momentum boost", new Vector2(x, y -= sepr), softMagenta);
+                AddText("   Exhausted Gourmand: 0.3x damage", new Vector2(x, y -= sepr), softMagenta);
+                x = 25f;
+                AddSlider(throwingSkill, new Vector2(x, y -= sepr), 0, 2, 400, softMagenta, softMagenta, softMagenta);
+                x = 150f;
+                y -= sepr;
+                AddCheckbox(AddStaticDamage, new Vector2(x, y -= sepr), softMagenta, softMagenta, softMagenta);
+                x = 25f;
+                AddFloatSlider(StaticDamage, new Vector2(x, y -= sepr), 0.01f, 5f, 400, softMagenta, softMagenta, softMagenta);
+
+                /**************** FoodPips ****************/
+                _curTab++;
+                AddTitle();
+                x = 150f;
+                y = 540f;
+                sepr = 30f;
+                AddCheckbox(ChangeFoodPips, new Vector2(x, y -= sepr), softYellow, softYellow, softYellow);
+                AddText("None: Food = X", new Vector2(x, y -= sepr), softYellow);
+                AddText("Percentage: Food * (X * 0.1)", new Vector2(x, y -= sepr), softYellow);
+                AddText("Subtraction: Food - X", new Vector2(x, y -= sepr), softYellow);
+                AddCheckbox(ChangeFoodPipsPercentage, new Vector2(x, y -= sepr), softYellow, softYellow, softYellow);
+                AddCheckbox(ChangeFoodPipsPercentageIgnoreDenominator, new Vector2(x, y -= sepr), softYellow, softYellow, softYellow);
+                AddCheckbox(ChangeFoodPipsSubtraction, new Vector2(x, y -= sepr), softYellow, softYellow, softYellow);
+                x = 25f;
+                AddSlider(PupFoodPips, new Vector2(x, y -= sepr), 1, 20, 400, softYellow, softYellow, softYellow);
+                AddSlider(PupHibernationFoodPips, new Vector2(x, y -= sepr), 1, 20, 400, softYellow, softYellow, softYellow);
+                
                 /**************** Toggles ****************/
-                CurTab++;
+                _curTab++;
                 AddTitle();
                 x = 150f;
                 y = 540f;
@@ -151,7 +213,7 @@ public partial class Pupifier
                 AddCheckbox(SpearmasterTwoHanded, new Vector2(x, y -= sepr), softYellow, softYellow, softYellow);
 
                 /**************** Experimental ****************/
-                CurTab++;
+                _curTab++;
                 AddTitle();
                 x = 150f;
                 y = 540f;
@@ -164,6 +226,7 @@ public partial class Pupifier
                 AddCheckbox(EnableWhenSlugpupClass, new Vector2(x, y -= sepr), softRed, softRed, softRed);
 
                 Log("Added all options...");
+                // ReSharper restore RedundantAssignment
             }
             catch (Exception ex)
             {
@@ -180,37 +243,26 @@ public partial class Pupifier
             OpLabel title = new(new Vector2(150f, 560f), new Vector2(300f, 30f), PluginInfo.PluginName, bigText: true);
             OpLabel version = new(new Vector2(150f, 540f), new Vector2(300f, 30f), $"Version {PluginInfo.PluginVersion}");
 
-            Tabs[CurTab].AddItems(new UIelement[]
-            {
-                title,
-                version
-            });
+            Tabs[_curTab].AddItems(title, version);
         }
 
         private void AddText(string text, Vector2 pos, Color? clr = null)
         {
-            if (clr == null)
-                clr = Menu.MenuColorEffect.rgbMediumGrey;
+            clr ??= Menu.MenuColorEffect.rgbMediumGrey;
 
             OpLabel label = new(pos, new Vector2(300f, 30f), text)
             {
                 color = (Color)clr,
             };
 
-            Tabs[CurTab].AddItems(new UIelement[]
-            {
-                label
-            });
+            Tabs[_curTab].AddItems(label);
         }
 
         private void AddFloatSlider(Configurable<float> option, Vector2 pos, float min = 0, float max = 1, int width = 150, Color? clr = null, Color? clrline = null, Color? clrtext = null)
         {
-            if (clr == null)
-                clr = Menu.MenuColorEffect.rgbMediumGrey;
-            if (clrline == null)
-                clrline = Menu.MenuColorEffect.rgbMediumGrey;
-            if (clrtext == null)
-                clrtext = Menu.MenuColorEffect.rgbMediumGrey;
+            clr ??= Menu.MenuColorEffect.rgbMediumGrey;
+            clrline ??= Menu.MenuColorEffect.rgbMediumGrey;
+            clrtext ??= Menu.MenuColorEffect.rgbMediumGrey;
 
             OpFloatSlider slider = new(option, pos, width)
             {
@@ -227,21 +279,14 @@ public partial class Pupifier
                 color = (Color)clrtext
             };
 
-            Tabs[CurTab].AddItems(new UIelement[]
-            {
-                slider,
-                label
-            });
+            Tabs[_curTab].AddItems(slider, label);
         }
 
         private void AddSlider(Configurable<int> option, Vector2 pos, int min = 0, int max = 1, int width = 150, Color? clr = null, Color? clrline = null, Color? clrtext = null)
         {
-            if (clr == null)
-                clr = Menu.MenuColorEffect.rgbMediumGrey;
-            if (clrline == null)
-                clrline = Menu.MenuColorEffect.rgbMediumGrey;
-            if (clrtext == null)
-                clrtext = Menu.MenuColorEffect.rgbMediumGrey;
+            clr ??= Menu.MenuColorEffect.rgbMediumGrey;
+            clrline ??= Menu.MenuColorEffect.rgbMediumGrey;
+            clrtext ??= Menu.MenuColorEffect.rgbMediumGrey;
 
             OpSlider slider = new(option, pos, width)
             {
@@ -258,30 +303,19 @@ public partial class Pupifier
                 color = (Color)clrtext
             };
 
-            Tabs[CurTab].AddItems(new UIelement[]
-            {
-                slider,
-                label
-            });
+            Tabs[_curTab].AddItems(slider, label);
         }
 
         private void AddIcon(Vector2 pos, string iconName)
         {
-            Tabs[CurTab].AddItems(new UIelement[]
-            {
-                new OpImage(pos, iconName)
-            });
+            Tabs[_curTab].AddItems(new OpImage(pos, iconName));
         }
-
-
+        
         private void AddCheckbox(Configurable<bool> option, Vector2 pos, Color? clr = null, Color? clrfill = null, Color? clrtext = null)
         {
-            if (clr == null)
-                clr = Menu.MenuColorEffect.rgbMediumGrey;
-            if (clrfill == null)
-                clrfill = Menu.MenuColorEffect.rgbMediumGrey;
-            if (clrtext == null)
-                clrtext = Menu.MenuColorEffect.rgbMediumGrey;
+            clr ??= Menu.MenuColorEffect.rgbMediumGrey;
+            clrfill ??= Menu.MenuColorEffect.rgbMediumGrey;
+            clrtext ??= Menu.MenuColorEffect.rgbMediumGrey;
 
             OpCheckBox checkbox = new(option, pos)
             {
@@ -296,24 +330,17 @@ public partial class Pupifier
                 color = (Color)clrtext
             };
 
-            Tabs[CurTab].AddItems(new UIelement[]
-            {
-                checkbox,
-                label
-            });
+            Tabs[_curTab].AddItems(checkbox, label);
         }
 
 
         private void AddKeyBinder(Configurable<KeyCode> option, Vector2 pos, Color? clr = null, Color? clrfill = null, Color? clrtext = null)
         {
-            if (clr == null)
-                clr = Menu.MenuColorEffect.rgbMediumGrey;
-            if (clrfill == null)
-                clrfill = Menu.MenuColorEffect.rgbMediumGrey;
-            if (clrtext == null)
-                clrtext = Menu.MenuColorEffect.rgbMediumGrey;
+            clr ??= Menu.MenuColorEffect.rgbMediumGrey;
+            clrfill ??= Menu.MenuColorEffect.rgbMediumGrey;
+            clrtext ??= Menu.MenuColorEffect.rgbMediumGrey;
 
-            OpKeyBinder keyBinder = new(option, pos, new Vector2(100f, 30f), false, OpKeyBinder.BindController.AnyController)
+            OpKeyBinder keyBinder = new(option, pos, new Vector2(100f, 30f), false)
             {
                 description = option.info.description,
                 colorEdge = (Color)clr,
@@ -326,19 +353,13 @@ public partial class Pupifier
                 color = (Color)clrtext
             };
 
-            Tabs[CurTab].AddItems(new UIelement[]
-            {
-                keyBinder,
-                label
-            });
+            Tabs[_curTab].AddItems(keyBinder, label);
         }
 
         private void AddComboBox(Configurable<string> option, Vector2 pos, string[] array, float width = 80f, FLabelAlignment alH = FLabelAlignment.Center, OpLabel.LabelVAlignment alV = OpLabel.LabelVAlignment.Center, Color? clr = null, Color? clrfill = null)
         {
-            if (clr == null)
-                clr = Menu.MenuColorEffect.rgbMediumGrey;
-            if (clrfill == null)
-                clrfill = Menu.MenuColorEffect.rgbMediumGrey;
+            clr ??= Menu.MenuColorEffect.rgbMediumGrey;
+            clrfill ??= Menu.MenuColorEffect.rgbMediumGrey;
 
             OpComboBox box = new(option, pos, width, array)
             {
@@ -369,27 +390,20 @@ public partial class Pupifier
 
             OpLabel label = new(pos + offset, box.size, option.info.Tags[0] as string)
             {
-                description = option.info.description
+                description = option.info.description,
+                alignment = alH,
+                verticalAlignment = OpLabel.LabelVAlignment.Center
             };
-            label.alignment = alH;
-            label.verticalAlignment = OpLabel.LabelVAlignment.Center;
 
-            Tabs[CurTab].AddItems(new UIelement[]
-            {
-                box,
-                label
-            });
+            Tabs[_curTab].AddItems(box, label);
         }
 
 
         private void AddTextBox<T>(Configurable<T> option, Vector2 pos, float width = 150f, Color? clr = null, Color? clrfill = null, Color? clrtext = null)
         {
-            if (clr == null)
-                clr = Menu.MenuColorEffect.rgbMediumGrey;
-            if (clrfill == null)
-                clrfill = Menu.MenuColorEffect.rgbMediumGrey;
-            if (clrtext == null)
-                clrtext = Menu.MenuColorEffect.rgbMediumGrey;
+            clr ??= Menu.MenuColorEffect.rgbMediumGrey;
+            clrfill ??= Menu.MenuColorEffect.rgbMediumGrey;
+            clrtext ??= Menu.MenuColorEffect.rgbMediumGrey;
 
             OpTextBox component = new(option, pos, width)
             {
@@ -405,11 +419,7 @@ public partial class Pupifier
                 description = option.info.description
             };
 
-            Tabs[CurTab].AddItems(new UIelement[]
-            {
-                component,
-                label
-            });
+            Tabs[_curTab].AddItems(component, label);
         }
     }
 }

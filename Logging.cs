@@ -11,8 +11,8 @@ namespace Pupifier
 
         public static void Log(string message)
         {
-            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
-            string log = $"[{timestamp}] {message}";
+            var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            var log = $"[{timestamp}] {message}";
 
             Instance.Logger.LogInfo(log);
         }
@@ -20,12 +20,12 @@ namespace Pupifier
         public static int Repetition = 1;
         public static void LogError(Exception exception, string customMessage)
         {
-            string errorCore =
+            var errorCore =
                 $"Error Message: {customMessage}\n" +
                 $"Exception Type: {exception.GetType().Name}\n" +
                 $"Error: {exception.Message}\n" +
                 $"StackTrace:\n{exception.StackTrace}";
-            string timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
+            var timestamp = DateTime.Now.ToString("yyyy-MM-dd HH:mm:ss");
 
             if (errorCore == _lastErrorMessage)
             {

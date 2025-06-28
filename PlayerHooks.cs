@@ -20,6 +20,8 @@ public partial class Pupifier
             Log("Detected Rain Meadow");
         }
         
+        On.SlugcatStats.ctor += SlugcatStats_ctor;
+        On.Player.ThrownSpear += PlayerOnThrownSpear;
         On.Player.Update += Player_Update;
 
         On.Player.setPupStatus += Player_SetPupStatus;
@@ -64,6 +66,54 @@ public partial class Pupifier
         IL.Player.Grabability += Player_AppendPupCheckGrabability;
     }
 
+    private void PlayerOnThrownSpear(On.Player.orig_ThrownSpear orig, Player self, Spear spear)
+    {
+        orig(self, spear);
+        if (Options.AddStaticDamage.Value) spear.spearDamageBonus *= Options.StaticDamage.Value;
+    }
+
+    private void SlugcatStats_ctor(On.SlugcatStats.orig_ctor orig, SlugcatStats self, SlugcatStats.Name slugcat, bool malnourished)
+    {
+        orig(self, slugcat, malnourished);
+        if (Options.ChangeFoodPips.Value)
+        {
+            var oldMaxFood = self.maxFood;
+            var oldFoodToHibernate = self.foodToHibernate;
+            var method = "SET";
+            if (Options.ChangeFoodPipsPercentage.Value)
+            {
+                method = "PERCENTAGE";
+
+                float foodMultiplier = Options.PupFoodPips.Value * 0.1f;
+                float hibernateMultiplier = Options.PupHibernationFoodPips.Value * 0.1f;
+
+                if (Options.ChangeFoodPipsPercentageIgnoreDenominator.Value)
+                {
+                    self.maxFood = (int)(self.maxFood * foodMultiplier);
+                    self.foodToHibernate = (int)(self.foodToHibernate * hibernateMultiplier);
+                }
+                else
+                {
+                    self.maxFood = Mathf.RoundToInt(self.maxFood * foodMultiplier);
+                    self.foodToHibernate = Mathf.RoundToInt(self.foodToHibernate * hibernateMultiplier);
+                }
+            }
+            else if (Options.ChangeFoodPipsSubtraction.Value)
+            {
+                method = "SUBTRACTION";
+                self.maxFood = Mathf.Max(1, self.maxFood - Options.PupFoodPips.Value);
+                self.foodToHibernate = Mathf.Max(1, self.foodToHibernate - Options.PupHibernationFoodPips.Value);
+            }
+            else
+            {
+                self.maxFood = Options.PupFoodPips.Value;
+                self.foodToHibernate = Options.PupHibernationFoodPips.Value;
+            }
+            Log($"Changed max food using {method} from {oldMaxFood} to {self.maxFood}");
+            Log($"Changed food to hibernate using {method} from {oldFoodToHibernate} to {self.foodToHibernate}");
+        }
+    }
+
     private void Player_MovementUpdate(On.Player.orig_MovementUpdate orig, Player self, bool eu)
     {
         orig(self, eu);
@@ -87,18 +137,18 @@ public partial class Pupifier
 
     private void Player_Jump(On.Player.orig_Jump orig, Player self)
     {
-        float actionJumpMultiplier = Options.UseSlugpupStatsToggle.Value ? Options.ActionJumpPowerFac.Value : 1f;
-        Player.AnimationIndex origAnimation = self.animation;
-        BodyChunk origbodyChunks0 = self.bodyChunks[0];
-        BodyChunk origbodyChunks1 = self.bodyChunks[1];
+        var actionJumpMultiplier = Options.UseSlugpupStatsToggle.Value ? Options.ActionJumpPowerFac.Value : 1f;
+        var origAnimation = self.animation;
+        var origbodyChunks0 = self.bodyChunks[0];
+        var origbodyChunks1 = self.bodyChunks[1];
         float origrollCounter = self.rollCounter;
         float origrollDirection = self.rollDirection;
-        float origaerobicLevel = self.aerobicLevel;
-        bool origwhiplashJump = self.whiplashJump;
-        bool origlongBellySlide = self.longBellySlide;
+        var origaerobicLevel = self.aerobicLevel;
+        var origwhiplashJump = self.whiplashJump;
+        var origlongBellySlide = self.longBellySlide;
         float origslideCounter = self.slideCounter;
         float origsuperLaunchJump = self.superLaunchJump;
-        Player.InputPackage originput0 = self.input[0];
+        var originput0 = self.input[0];
         orig(self);
         if (!self.playerState.isPup || self.isNPC) return;
 
@@ -111,15 +161,15 @@ public partial class Pupifier
         }
         else if (origAnimation == Player.AnimationIndex.Roll)
         {
-            float massMultiplier = GetPlayerMassMultiplier(self);
-            float num3 = Mathf.InverseLerp(0f, 25f, origrollCounter);
+            var massMultiplier = GetPlayerMassMultiplier(self);
+            var num3 = Mathf.InverseLerp(0f, 25f, origrollCounter);
             self.bodyChunks[0].vel = Custom.DegToVec(origrollDirection * Mathf.Lerp(60f, 35f, num3)) * Mathf.Lerp(9.5f, 13.1f, num3) * massMultiplier * 0.65f * actionJumpMultiplier;
             self.bodyChunks[1].vel = Custom.DegToVec(origrollDirection * Mathf.Lerp(60f, 35f, num3)) * Mathf.Lerp(9.5f, 13.1f, num3) * massMultiplier * 0.65f * actionJumpMultiplier;
         }
         else if (origAnimation == Player.AnimationIndex.BellySlide)
         {
-            float massMultiplier = GetPlayerMassMultiplier(self);
-            float num4 = 9f;
+            var massMultiplier = GetPlayerMassMultiplier(self);
+            var num4 = 9f;
             if (self.isRivulet)
             {
                 num4 = 18f;
@@ -132,7 +182,7 @@ public partial class Pupifier
             num4 = Mathf.Ceil(num4 * 0.666f);
             if (!origwhiplashJump && !Mathf.Approximately(originput0.x, -origrollDirection))
             {
-                float num5 = 8.5f;
+                var num5 = 8.5f;
                 if (self.isRivulet)
                 {
                     num5 = 10f;
@@ -228,7 +278,7 @@ public partial class Pupifier
 
     private float GetPlayerMassMultiplier(Player player)
     {
-        float massMultiplier = Mathf.Lerp(1f, 1.15f, player.Adrenaline);
+        var massMultiplier = Mathf.Lerp(1f, 1.15f, player.Adrenaline);
         if (player.grasps[0] != null && player.HeavyCarry(player.grasps[0].grabbed) && !(player.grasps[0].grabbed is Cicada))
         {
             massMultiplier += Mathf.Min(Mathf.Max(0f, player.grasps[0].grabbed.TotalMass - 0.2f) * 1.5f, 1.3f);
@@ -429,8 +479,8 @@ public partial class Pupifier
 
                 Log("Adjusting tail dimensions");
             
-                float scale = slugpupEnabled ? Options.TailSize.Value : 1f;
-                for (int i = 0; i < playerGraphics.tail.Length; i++)
+                var scale = slugpupEnabled ? Options.TailSize.Value : 1f;
+                for (var i = 0; i < playerGraphics.tail.Length; i++)
                 {
                     if (i >= originalValues.rads.Length) break;
                 
@@ -478,8 +528,8 @@ public partial class Pupifier
     {
         if (self.isNPC || slugpupEnabled == self.playerState.isPup) return;
         
-        float newMass = (0.7f + (slugpupEnabled ? 0.05f : 0f) * self.slugcatStats.bodyWeightFac +
-                         (slugpupEnabled ? 0.18f : 0f) * Options.SizeModifier.Value) / 2f;
+        var newMass = (0.7f + (slugpupEnabled ? 0.05f : 0f) * self.slugcatStats.bodyWeightFac +
+                       (slugpupEnabled ? 0.18f : 0f) * Options.SizeModifier.Value) / 2f;
         Log($"ManualPupChange: Changing mass to {newMass}, reducing tail size and trying to reduce connection distance");
         
         // Manual body size (mass)
@@ -535,6 +585,7 @@ public partial class Pupifier
         public readonly float PoleClimbSpeedFac;
         public readonly float CorridorClimbSpeedFac;
         public readonly float RunspeedFac;
+        public readonly int throwingSkill;
 
         public SlugBaseStats(SlugcatStats stats)
         {
@@ -547,6 +598,7 @@ public partial class Pupifier
             PoleClimbSpeedFac = stats.poleClimbSpeedFac;
             CorridorClimbSpeedFac = stats.corridorClimbSpeedFac;
             RunspeedFac = stats.runspeedFac;
+            throwingSkill = stats.throwingSkill;
         }
     }
     
@@ -555,14 +607,14 @@ public partial class Pupifier
         // setPupStatus sets isPup and also updates body proportions
         // we multiply by survivor -> slugpup values (aka difference between survivor and slugpup)
         // Change body size using setPupStatus
-        if (!BaseStatsCache.TryGetValue(self.SlugCatClass, out SlugBaseStats baseStats))
+        if (!BaseStatsCache.TryGetValue(self.SlugCatClass, out var baseStats))
         {
             var tempStats = new SlugcatStats(self.SlugCatClass, false);
             baseStats = new SlugBaseStats(tempStats);
             BaseStatsCache.Add(self.SlugCatClass, baseStats);
         }
 
-        if (!MalnourishedBaseStatsCache.TryGetValue(self.SlugCatClass, out SlugBaseStats malnourishedBaseStats))
+        if (!MalnourishedBaseStatsCache.TryGetValue(self.SlugCatClass, out var malnourishedBaseStats))
         {
             var tempStats = new SlugcatStats(self.SlugCatClass, true);
             malnourishedBaseStats = new SlugBaseStats(tempStats);
@@ -600,6 +652,7 @@ public partial class Pupifier
             self.slugcatStats.poleClimbSpeedFac = activeBaseStats.PoleClimbSpeedFac * 0.8f * Options.PoleClimbSpeedFac.Value * Options.GlobalModifier.Value;
             self.slugcatStats.corridorClimbSpeedFac = activeBaseStats.CorridorClimbSpeedFac * 0.8f * Options.CorridorClimbSpeedFac.Value * Options.GlobalModifier.Value;
             self.slugcatStats.runspeedFac = activeBaseStats.RunspeedFac * 0.8f * Options.RunSpeedFac.Value * Options.GlobalModifier.Value;
+            self.slugcatStats.throwingSkill = Options.throwingSkill.Value;
         }
         else
         {
@@ -613,6 +666,7 @@ public partial class Pupifier
             self.slugcatStats.poleClimbSpeedFac = activeBaseStats.PoleClimbSpeedFac;
             self.slugcatStats.corridorClimbSpeedFac = activeBaseStats.CorridorClimbSpeedFac;
             self.slugcatStats.runspeedFac = activeBaseStats.RunspeedFac;
+            self.slugcatStats.throwingSkill = activeBaseStats.throwingSkill;
         }
         LogStats(self, "post-change");
     }
@@ -650,7 +704,7 @@ public partial class Pupifier
             if (player.animation == Player.AnimationIndex.HangUnderVerticalBeam)
             {
                 // Use the retrieved player reference
-                Vector2 offset = self.absoluteHuntPos - player.bodyChunks[0].pos;
+                var offset = self.absoluteHuntPos - player.bodyChunks[0].pos;
                 self.absoluteHuntPos = player.bodyChunks[0].pos + offset * 0.5f;
             }
 
