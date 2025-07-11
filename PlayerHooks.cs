@@ -54,7 +54,7 @@ public partial class Pupifier
         // To have persistent body size
         On.Player.MovementUpdate += Player_MovementUpdate;
         
-        // False in SlugcatGrab if we have using both arms enabled or if were spearmaster, and we want to pick up a spear
+        // False in SlugcatGrab if we have using both arms enabled or if we're spearmaster, and we want to pick up a spear
         IL.Player.SlugcatGrab += Player_SlugcatGrabAppendToIsSlugpupCheck;
 
         // Add so we get correct hand positions
@@ -64,6 +64,15 @@ public partial class Pupifier
 
         // Allows grabbing other players
         IL.Player.Grabability += Player_AppendPupCheckGrabability;
+        // Allow grabbing other slugpups when pup
+        On.Player.Grabability += Player_Grabability;
+    }
+
+    private Player.ObjectGrabability Player_Grabability(On.Player.orig_Grabability orig, Player self, PhysicalObject obj)
+    {
+        var grabbable = orig(self, obj);
+        if (!self.isNPC && self.playerState.isPup && obj is Player npc && npc != self && npc.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Slugpup && !npc.playerState.forceFullGrown) return Player.ObjectGrabability.OneHand;
+        return grabbable;
     }
 
     private void PlayerOnThrownSpear(On.Player.orig_ThrownSpear orig, Player self, Spear spear)
