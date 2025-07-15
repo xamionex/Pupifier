@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Linq;
 using HarmonyLib;
 using RWCustom;
+using Random = UnityEngine.Random;
 
 namespace Pupifier;
 
@@ -36,7 +37,9 @@ public partial class Pupifier
 
         // we set isSlugpup, RenderAsPup to playerstate
         var isSlugpupHook = new Hook(typeof(Player).GetProperty("isSlugpup")?.GetGetMethod(), (Func<Player, bool> orig, Player self) => orig(self) || (!self.isNPC && self.playerState.isPup));
-        //new Hook(typeof(PlayerGraphics).GetProperty("RenderAsPup").GetGetMethod(), (Func<PlayerGraphics, bool> orig, PlayerGraphics self) => orig(self) || (!self.player.isNPC && self.player.playerState.isPup));
+        
+        // Unneeded, but kept just in case
+        //var RenderAsPupHook = new Hook(typeof(PlayerGraphics).GetProperty("RenderAsPup").GetGetMethod(), (Func<PlayerGraphics, bool> orig, PlayerGraphics self) => orig(self) || (!self.player.isNPC && self.player.playerState.isPup));
 
         // patch because it checks isSlugpup and tries getting npcStats
         var antiIsSlugpupHook = new Hook(typeof(Player).GetProperty("slugcatStats")?.GetGetMethod(), (Func<Player, SlugcatStats> orig, Player self) => self is { isSlugpup: true, isNPC: false } ? self.abstractCreature.world.game.session.characterStats : orig(self));
@@ -57,8 +60,12 @@ public partial class Pupifier
         // False in SlugcatGrab if we have using both arms enabled or if we're spearmaster, and we want to pick up a spear
         IL.Player.SlugcatGrab += Player_SlugcatGrabAppendToIsSlugpupCheck;
 
+        // Allow switching hands
+        IL.Player.GrabUpdate += Player_AppendToIsSlugpupCheck;
+
         // Add so we get correct hand positions
         IL.SlugcatHand.Update += Player_AppendPupCheck;
+
         // Fix original slugpup animations
         On.SlugcatHand.Update += Player_SlugcatHandUpdate;
 
@@ -70,9 +77,11 @@ public partial class Pupifier
 
     private Player.ObjectGrabability Player_Grabability(On.Player.orig_Grabability orig, Player self, PhysicalObject obj)
     {
-        var grabbable = orig(self, obj);
-        if (!self.isNPC && self.playerState.isPup && obj is Player npc && npc != self && npc.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Slugpup && !npc.playerState.forceFullGrown) return Player.ObjectGrabability.OneHand;
-        return grabbable;
+        if (self.isNPC || !self.playerState.isPup) return orig(self, obj);
+        if (obj is Player npc && npc.playerState.alive && npc != self && npc.SlugCatClass == MoreSlugcatsEnums.SlugcatStatsName.Slugpup && !npc.playerState.forceFullGrown ||
+            obj is Player plr && plr.playerState.alive && plr != self && !plr.isNPC && plr.playerState.isPup && !plr.playerState.forceFullGrown)
+            return Player.ObjectGrabability.OneHand;
+        return orig(self, obj);
     }
 
     private void PlayerOnThrownSpear(On.Player.orig_ThrownSpear orig, Player self, Spear spear)
@@ -503,7 +512,7 @@ public partial class Pupifier
             LogError(ex, "Error in Player_SetPupStatus");
         }
     }
-
+    
     private void PlayerGraphics_DrawSprites(On.PlayerGraphics.orig_DrawSprites orig, PlayerGraphics self, RoomCamera.SpriteLeaser sLeaser, RoomCamera rCam, float timeStacker, Vector2 camPos)
     {
         orig(self, sLeaser, rCam, timeStacker, camPos);
@@ -702,12 +711,14 @@ public partial class Pupifier
         orig(self);
         
         // Get first owner (protected field) via Traverse
-        var limb = Traverse.Create(self).Field("owner").GetValue<GraphicsModule>();
-        if (limb == null) return;
+        //var limb = Traverse.Create(self).Field("owner").GetValue<GraphicsModule>();
+        //if (limb == null) return;
 
         // Get final owner (Player) from the limb object
-        if (limb.owner is not Player player || player.isNPC || !player.playerState.isPup) return;
+        //if (limb.owner is not Player player || player.isNPC || !player.playerState.isPup) return;
 
+        if (self.owner.owner is not Player player || player.isNPC || !player.playerState.isPup) return;
+        
         try 
         {
             if (player.animation == Player.AnimationIndex.HangUnderVerticalBeam)
